@@ -18,10 +18,12 @@ class PublicProfileResource extends JsonResource
     {
         $data = [
             'id' => $this->id,
-            'first_name' => $this->first_name,
-            'last_name' => $this->last_name,
+            'name' => $this->first_name .' ' .$this->last_name,
+            'email' => $this->email,
+            'gender' => $this->gender,
+            'birth_date' => $this->birth_date,
             // استخدم الـ Accessor الجديد الذي أنشأناه في موديل User
-            'profile_picture_url' => $this->profile_picture_url,
+            'profile_picture' => $this->profile_picture_url,
             'role' => $this->role,
         ];
 
@@ -30,6 +32,7 @@ class PublicProfileResource extends JsonResource
                 'college' => $this->college,
                 'major' => $this->major,
                 'year' => $this->year,
+                'university_id' => $this->university_id,
             ]);
         } elseif ($this->role === RoleEnum::ACADEMIC) {
             $data = array_merge($data, [

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\FullProfileResource;
 use App\Http\Resources\PostResource;
 use App\Http\Resources\PrivateProfileResource;
 use App\Http\Resources\PublicProfileResource;
@@ -27,6 +28,11 @@ class ProfileController extends Controller
     public function showPublicProfile(User $user)
     {
         return new PublicProfileResource($user);
+    }
+        public function showFullProfile(User $user)
+    {
+        // ببساطة، قم بإرجاع الـ Resource الجديد للمستخدم المطلوب
+        return new FullProfileResource($user);
     }
 
     /**

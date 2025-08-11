@@ -36,6 +36,9 @@ class CommentController extends Controller
             'content' => $request->validated('content'),
         ]);
 
+        // قم بزيادة عداد التعليقات على المنشور
+        $post->increment('comments_count');
+
         $comment->load('user');
         CommentPosted::dispatch($comment);
 
@@ -69,7 +72,13 @@ class CommentController extends Controller
     {
         $this->authorize('delete', $comment);
 
+         $post = $comment->post; // جلب المنشور المرتبط بالتعليق
+
         CommentDeleted::dispatch($comment);
+
+        if ($post && $post->comments_count > 0) {
+            $post->decrement('comments_count');
+        }
 
         $comment->delete();
 

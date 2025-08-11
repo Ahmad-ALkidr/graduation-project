@@ -2,8 +2,8 @@
 
 namespace App\Events;
 
+use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
-use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
@@ -15,9 +15,6 @@ class PostLikesUpdated implements ShouldBroadcast
     public int $postId;
     public int $likesCount;
 
-    /**
-     * Create a new event instance.
-     */
     public function __construct(int $postId, int $likesCount)
     {
         $this->postId = $postId;
@@ -31,20 +28,31 @@ class PostLikesUpdated implements ShouldBroadcast
      */
     public function broadcastOn(): array
     {
-        // نرسل التحديث على القناة الخاصة بالمنشور المحدد
-        return [new PrivateChannel('posts.' . $this->postId)];
+        // --- هذا هو التعديل الرئيسي ---
+        // سنقوم بالبث على قناة عامة اسمها 'post-likes'
+        return [
+            new Channel('post-likes'),
+        ];
     }
 
+    /**
+     * The event's broadcast name.
+     */
     public function broadcastAs(): string
     {
-        return 'post.likes.updated';
+        // اسم الحدث الذي سيستمع له التطبيق
+        return 'like.updated';
     }
 
+    /**
+     * Get the data to broadcast.
+     *
+     * @return array<string, mixed>
+     */
     public function broadcastWith(): array
     {
-        // نرسل فقط البيانات التي تحتاجها الواجهة الأمامية لتحديث نفسها
         return [
-            'id' => $this->postId,
+            'post_id' => $this->postId,
             'likes_count' => $this->likesCount,
         ];
     }
