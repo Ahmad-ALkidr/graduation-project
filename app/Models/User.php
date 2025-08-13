@@ -4,7 +4,6 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use App\Enums\RoleEnum;
-use App\Notifications\CustomResetPasswordNotification;
 use Attribute;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -40,7 +39,6 @@ class User extends Authenticatable implements MustVerifyEmail
         'otp_sent_at' => 'datetime',
         'role' => RoleEnum::class,
     ];
-        // --- هذا هو التعديل الرئيسي ---
     /**
      * The accessors to append to the model's array form.
      *
@@ -67,10 +65,6 @@ class User extends Authenticatable implements MustVerifyEmail
      * @param  string  $token
      * @return void
      */
-    public function sendPasswordResetNotification($token)
-    {
-        $this->notify(new CustomResetPasswordNotification($token));
-    }
 
 
     public function isStudent(): bool

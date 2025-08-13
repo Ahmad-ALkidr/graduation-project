@@ -13,29 +13,32 @@ class UserController extends Controller
     /**
      * البحث عن مستخدمين بناءً على الاسم
      */
-    public function search(Request $request)
+    public function search($query)
     {
-        // 1. التحقق من أن حقل البحث موجود ويحتوي على حرفين على الأقل
-        $validated = $request->validate([
-            'query' => 'required|string|min:2',
-        ]);
+        if (mb_strlen($query) < 2) {
+            return response()->json(['data' => []]);
+        }
 
-        $searchQuery = $validated['query'];
+        $searchQuery = $query;
 
-        // 2. البحث في قاعدة البيانات
         $users = User::where(function ($query) use ($searchQuery) {
-                // البحث في الاسم الأول أو اسم العائلة
-                $query->where('first_name', 'LIKE', "{$searchQuery}%")
-                      ->orWhere('last_name', 'LIKE', "{$searchQuery}%")
-                      // يمكنك إضافة البحث في الاسم الكامل إذا أردت
-                      ->orWhere(DB::raw("CONCAT(first_name, ' ', last_name)"), 'LIKE', "{$searchQuery}%");
+                $query->where('first_name', 'ILIKE', "{$searchQuery}%")
+                      ->orWhere('last_name', 'ILIKE', "{$searchQuery}%")
+                      ->orWhere(DB::raw("CONCAT(first_name, ' ', last_name)"), 'ILIKE', "{$searchQuery}%");
             })
-            ->where('id', '!=', auth()->id()) // 3. استثناء المستخدم الحالي من نتائج البحث
-            ->limit(10) // 4. تحديد عدد النتائج بـ 10 كحد أقصى لتحسين الأداء
+            ->where('id', '!=', auth()->id())
+            // نقوم بترتيب النتائج حسب الأولوية
+            ->orderByRaw(
+                "CASE
+                    WHEN first_name ILIKE ? THEN 1
+                    WHEN last_name ILIKE ? THEN 2
+                    ELSE 3
+                END",
+                ["{$searchQuery}%", "{$searchQuery}%"]
+            )
+            ->limit(10)
             ->get();
 
-        // 5. إرجاع النتائج باستخدام الـ Resource الذي أنشأناه سابقًا
-        // هذا يضمن عدم تسريب أي بيانات خاصة
         return PublicProfileResource::collection($users);
     }
 }

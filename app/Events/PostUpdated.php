@@ -13,7 +13,7 @@ use Illuminate\Queue\SerializesModels;
 
 class PostUpdated implements ShouldBroadcast
 {
-    use Dispatchable, InteractsWithSockets, SerializesModels; 
+    use Dispatchable, InteractsWithSockets, SerializesModels;
 
     /**
      * Create a new event instance.
@@ -38,5 +38,12 @@ class PostUpdated implements ShouldBroadcast
         return 'post.updated';
     }
 
-    // يمكنك إضافة دالة broadcastWith هنا لتنسيق البيانات
+    public function broadcastWith(): array
+    {
+        return [
+            'id' => $this->post->id,
+            'title' => $this->post->title,
+            'content' => $this->post->content,
+        ];
+    }
 }

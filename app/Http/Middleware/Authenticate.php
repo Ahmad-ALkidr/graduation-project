@@ -12,7 +12,6 @@ class Authenticate extends Middleware
      */
     protected function redirectTo(Request $request): ?string
     {
-        // --- هذا هو التعديل الرئيسي ---
         // إذا كان الطلب هو طلب API (يتوقع استجابة JSON)،
         // لا تقم بإعادة التوجيه، بل أعد القيمة null.
         // سيقوم Laravel تلقائيًا بإرسال استجابة 401 Unauthorized JSON.

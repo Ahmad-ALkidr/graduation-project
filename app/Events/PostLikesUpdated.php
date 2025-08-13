@@ -28,7 +28,6 @@ class PostLikesUpdated implements ShouldBroadcast
      */
     public function broadcastOn(): array
     {
-        // --- هذا هو التعديل الرئيسي ---
         // سنقوم بالبث على قناة عامة اسمها 'post-likes'
         return [
             new Channel('post-likes'),

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Events\AnnouncementCreated;
 use App\Models\Announcement;
 use App\Models\User;
 use App\Notifications\NewAnnouncementNotification;
@@ -32,7 +33,6 @@ class TelegramWebhookController extends Controller
             $fileType = null;
             $fileData = null;
 
-            // --- هذا هو التعديل الرئيسي ---
             // التحقق من أنواع الملفات المختلفة
             if (isset($post['photo'])) {
                 $fileType = 'image';
@@ -69,6 +69,8 @@ class TelegramWebhookController extends Controller
                 'file_type' => $fileType,
                 'telegram_message_id' => $messageId,
             ]);
+            broadcast(new AnnouncementCreated($announcement));
+
 
             $users = User::all();
             Notification::send($users, new NewAnnouncementNotification($announcement));

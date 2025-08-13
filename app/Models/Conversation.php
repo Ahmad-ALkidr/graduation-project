@@ -13,10 +13,14 @@ class Conversation extends Model
     /**
      * العلاقة مع المشاركين في المحادثة (متعدد لمتعدد)
      */
-    public function participants()
-    {
-        return $this->belongsToMany(User::class, 'conversation_user')->withTimestamps();
-    }
+public function participants() {
+    return $this->belongsToMany(
+        User::class,
+        'conversation_user',
+        'conversation_id', // اسم عمود المحادثة في الجدول الوسيط
+        'user_id'         // اسم عمود المستخدم في الجدول الوسيط
+    )->withTimestamps();
+}
 
     /**
      * العلاقة مع الرسائل الخاصة
@@ -24,5 +28,9 @@ class Conversation extends Model
     public function messages()
     {
         return $this->hasMany(PrivateMessage::class);
+    }
+    public function latestMessage()
+    {
+        return $this->hasOne(PrivateMessage::class)->latestOfMany();
     }
 }

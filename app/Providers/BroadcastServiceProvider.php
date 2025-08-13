@@ -12,9 +12,13 @@ class BroadcastServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        
-        Broadcast::routes();
+        \Log::debug('Broadcast Service Initialized'); // تأكيد تحميل الخدمة
 
-        require base_path('routes/channels.php');
+        Broadcast::routes([
+            'prefix' => 'api',
+            'middleware' => ['auth:sanctum']
+        ]);
+
+            require base_path('routes/channels.php');
     }
 }

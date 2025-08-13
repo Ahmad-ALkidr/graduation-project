@@ -28,7 +28,6 @@ class PostCreated implements ShouldBroadcast
      */
     public function broadcastOn(): array
     {
-        // --- هذا هو التعديل الرئيسي ---
         // سنقوم بالبث على قناة عامة اسمها 'posts'
         return [
             new Channel('posts'),

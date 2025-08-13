@@ -18,7 +18,7 @@ class UserResource extends JsonResource
             'id' => $this->id,
             'name' => $this->first_name . ' ' . $this->last_name,
             'email' => $this->email,
-            'profile_picture' => $this->profile_picture,
+            'profile_picture' => $this->profile_picture ? asset('storage/' . $this->profile_picture) : null,
             'posts_count' => $this->posts_count,
             'comments_count' => $this->comments_count,
             'likes_count' => $this->likes_count,

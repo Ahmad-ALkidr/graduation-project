@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 
 class ConversationController extends Controller
 {
+
     /**
      * جلب كل المحادثات الخاصة بالمستخدم الحالي
      */
@@ -64,7 +65,17 @@ class ConversationController extends Controller
         // تأكد من أن المستخدم الحالي هو جزء من هذه المحادثة
         $this->authorize('view', $conversation);
 
-        $messages = $conversation->messages()->with('sender')->latest()->paginate(50);
+        $query = $conversation->messages()->with('sender')->latest();
+
+        // إذا قام التطبيق بإرسال 'before_id'، اجلب الرسائل الأقدم فقط
+        if ($request->has('before_id')) {
+            $query->where('id', '<', $request->input('before_id'));
+        }
+
+        // جلب 50 رسالة فقط في كل مرة
+        $messages = $query->limit(50)->get();
+
+        // هذا الرد سيعيد فقط مصفوفة بالرسائل داخل مفتاح "data"
         return PrivateMessageResource::collection($messages);
     }
 

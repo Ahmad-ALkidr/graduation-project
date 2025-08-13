@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\AnnouncementController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
@@ -9,7 +10,6 @@ use App\Http\Controllers\Api\ChatStatusController;
 use App\Http\Controllers\Api\PostController;
 use App\Http\Controllers\Api\CommentController;
 use App\Http\Controllers\Api\ConversationController;
-use App\Http\Controllers\Api\ForgotPasswordController;
 use App\Http\Controllers\Api\LibraryController;
 use App\Http\Controllers\Api\LikeController;
 use App\Http\Controllers\Api\ProfileController;
@@ -17,8 +17,10 @@ use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\DeviceController;
 use App\Http\Controllers\Api\GeminiChatController;
 use App\Http\Controllers\Api\MessageController;
+use App\Http\Controllers\Api\PasswordResetController;
 use App\Http\Controllers\Api\TelegramWebhookController;
-use App\Http\Controllers\RedirectController;
+use App\Http\Controllers\Api\BroadcastAuthController;
+use Illuminate\Support\Facades\Broadcast;
 
 /*
 |--------------------------------------------------------------------------
@@ -34,11 +36,10 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::post('/verify-otp', [AuthController::class, 'verifyOtp']);
 Route::post('/resend-otp', [AuthController::class, 'resendOtp']);
 
-// إعادة تعيين كلمة المرور
-Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLinkEmail']);
-Route::post('/reset-password', [ForgotPasswordController::class, 'reset'])->name('password.reset');
-
-Route::get('/password/reset/redirect', [RedirectController::class, 'redirectToApp'])->name('password.reset.redirect');
+// --- مسارات إعادة تعيين كلمة المرور باستخدام OTP ---
+Route::post('/password/email', [PasswordResetController::class, 'sendResetOtp']);
+Route::post('/password/code/check', [PasswordResetController::class, 'verifyResetOtp']);
+Route::post('/password/reset', [PasswordResetController::class, 'resetPassword']);
 
 
 // --- المسارات العامة للمنشورات ---
@@ -49,6 +50,8 @@ Route::get('/posts/{post}/comments', [CommentController::class, 'index']);
 // --- مسار استقبال تحديثات بوت التلجرام ---
 // يجب أن يكون المسار سريًا بعض الشيء لمنع الوصول غير المصرح به
 Route::post('/telegram/webhook/'.env('TELEGRAM_BOT_TOKEN'), [TelegramWebhookController::class, 'handle']);
+Route::get('/announcements', [AnnouncementController::class, 'index']);
+
 
 
 // --- 2. المسارات المحمية (تتطلب تسجيل الدخول) ---
@@ -88,8 +91,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/users/{user}/profile', [ProfileController::class, 'showPublicProfile']);
     Route::get('/users/{user}/posts', [ProfileController::class, 'getUserPosts']);
     Route::get('/users/{user}/library-files', [ProfileController::class, 'getUserLibraryFiles']);
-    Route::post('/users/search', [UserController::class, 'search']);
-    // --- مسار البروفايل الكامل ---
+    Route::get('/users/search/{query}', [UserController::class, 'search']);
     Route::get('/users/{user}/full-profile', [ProfileController::class, 'showFullProfile']);
 
 
@@ -108,5 +110,4 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/conversations', [ConversationController::class, 'store']);
     Route::get('/conversations/{conversation}/messages', [ConversationController::class, 'getMessages']);
     Route::post('/conversations/{conversation}/messages', [ConversationController::class, 'sendMessage']);
-
 });
