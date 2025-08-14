@@ -43,7 +43,11 @@ return [
         'api' => [
             'driver' => 'sanctum',
             'provider' => 'users',
-        ]
+        ],
+        'admin' => [
+        'driver' => 'session',
+        'provider' => 'admins', // We will define this provider next
+        ],
     ],
 
     /*
@@ -65,6 +69,11 @@ return [
 
     'providers' => [
         'users' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\User::class,
+        ],
+        // ✨ Add this new provider that the 'admin' guard will use
+        'admins' => [
             'driver' => 'eloquent',
             'model' => App\Models\User::class,
         ],

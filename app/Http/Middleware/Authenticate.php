@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use Illuminate\Auth\Middleware\Authenticate as Middleware;
 use Illuminate\Http\Request;
+use phpDocumentor\Reflection\Types\Null_;
 
 class Authenticate extends Middleware
 {
@@ -12,9 +13,14 @@ class Authenticate extends Middleware
      */
     protected function redirectTo(Request $request): ?string
     {
-        // إذا كان الطلب هو طلب API (يتوقع استجابة JSON)،
-        // لا تقم بإعادة التوجيه، بل أعد القيمة null.
-        // سيقوم Laravel تلقائيًا بإرسال استجابة 401 Unauthorized JSON.
-        return $request->expectsJson() ? null : route('login');
+        if ($request->expectsJson()) {
+            return null;
+        }
+        if ($request->routeIs('admin.*')) {
+            return route('admin.login');
+        }
+
+        return null;
+
     }
 }

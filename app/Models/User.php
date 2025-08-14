@@ -82,10 +82,18 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->role === RoleEnum::ADMIN;
     }
 
-    public function hasRole(RoleEnum $role): bool
-    {
-        return $this->role->value === $role->value;
+    // public function hasRole(RoleEnum $role): bool
+    // {
+    //     return $this->role->value === $role->value;
+    // }
+    public function hasRole(RoleEnum|string $role): bool
+{
+    if (is_string($role)) {
+        $role = RoleEnum::from($role); // يحول النص إلى Enum
     }
+
+    return $this->role === $role;
+}
 
     // Relations
     public function posts()

@@ -1,13 +1,13 @@
 <?php
-// ✨ --- START of temporary debug code --- ✨
-if ($_SERVER['REQUEST_URI'] === '/api/broadcasting/auth') {
-    $rawInput = file_get_contents('php://input');
-    $logMessage = "--- PHP RAW INPUT CHECK ---\n";
-    $logMessage .= "php://input content: " . $rawInput . "\n";
-    $logMessage .= "---------------------------\n";
-    file_put_contents(__DIR__.'/../storage/logs/laravel.log', $logMessage, FILE_APPEND);
-}
-// ✨ --- END of temporary debug code --- ✨
+// // ✨ --- START of temporary debug code --- ✨
+// if ($_SERVER['REQUEST_URI'] === '/api/broadcasting/auth') {
+//     $rawInput = file_get_contents('php://input');
+//     $logMessage = "--- PHP RAW INPUT CHECK ---\n";
+//     $logMessage .= "php://input content: " . $rawInput . "\n";
+//     $logMessage .= "---------------------------\n";
+//     file_put_contents(__DIR__.'/../storage/logs/laravel.log', $logMessage, FILE_APPEND);
+// }
+// // ✨ --- END of temporary debug code --- ✨
 use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Http\Request;
 

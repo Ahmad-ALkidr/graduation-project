@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Events\ConversationUpdated;
 use App\Events\PrivateMessageSent;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ConversationResource;
@@ -84,7 +85,7 @@ class ConversationController extends Controller
      */
     public function sendMessage(Request $request, Conversation $conversation)
     {
-        $this->authorize('view', $conversation); // نفس شرط العرض
+        $this->authorize('view', $conversation);
 
         $validated = $request->validate(['content' => 'required|string']);
 
@@ -97,6 +98,8 @@ class ConversationController extends Controller
 
         // بث الرسالة الجديدة للمشاركين الآخرين
         broadcast(new PrivateMessageSent($message))->toOthers();
+        broadcast(new ConversationUpdated($conversation));
+
 
         return new PrivateMessageResource($message);
     }

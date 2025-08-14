@@ -24,7 +24,6 @@ class AuthServiceProvider extends ServiceProvider
     {
         $this->registerPolicies();
 
-        // --- التصحيح الرئيسي هنا ---
         Gate::define('is-admin', fn(User $user) => $user->role === RoleEnum::ADMIN);
         Gate::define('is-academic', fn(User $user) => $user->role === RoleEnum::ACADEMIC);
         Gate::define('is-student', fn(User $user) => $user->role === RoleEnum::STUDENT);
