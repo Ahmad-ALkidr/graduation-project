@@ -18,8 +18,7 @@ class PostResource extends JsonResource
             'id' => $this->id,
             'content' => $this->content,
             'image_url' => $this->image_path ? asset('storage/' . $this->image_path) : null,
-            'created_at' => $this->created_at->diffForHumans(), // تنسيق الوقت ليكون أسهل في القراءة
-
+            'created_at' => $this->created_at->diffForHumans(), 
             'likes_count' => $this->whenCounted('likers', $this->likers_count, 0), // عرض عدد الإعجابات
             'comments_count' => $this->whenCounted('comments', $this->comments_count, 0), // عرض عدد التعليقات
 

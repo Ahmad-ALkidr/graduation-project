@@ -1,10 +1,9 @@
 <?php
 
-use App\Http\Controllers\Admin\AdminAuthController;
-use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\DashboardController;
-use App\Http\Controllers\Admin\UserManagementController;
-use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\Admin\manage_users\AdminAuthController;
+use App\Http\Controllers\Admin\manage_users\AdminController;
+use App\Http\Controllers\Admin\manage_users\UserManagementController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -65,4 +64,18 @@ Route::prefix('users')->name('admin.users.')->controller(UserManagementControlle
 
     // You might want a separate route for the password change form/handler
     // Route::post('/account/change-password/{user}', 'change_password')->name('change-password');
+});
+// routes/web.php
+
+Route::get('/check-time', function () {
+    $laravelTime = now()->toDateTimeString();
+    $phpTime = date('Y-m-d H:i:s');
+    $timezone = config('app.timezone');
+
+    return "
+        <h1>Time Check</h1>
+        <p>Laravel Time (now()): <strong>{$laravelTime}</strong></p>
+        <p>PHP Time (date()): <strong>{$phpTime}</strong></p>
+        <p>Application Timezone: <strong>{$timezone}</strong></p>
+    ";
 });

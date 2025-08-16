@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Admin;
+namespace App\Http\Controllers\Admin\manage_users;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
@@ -13,11 +13,11 @@ use Illuminate\Validation\Rules\Password;
 
 class AdminAuthController extends Controller
 {
-    public function show_list()
-    {
-        $users = User::orderBy('created_at', 'DESC')->paginate(15);
-        return view('Admin.app-users-list', compact('users'));
-    }
+    // public function show_list()
+    // {
+    //     $users = User::orderBy('created_at', 'DESC')->paginate(15);
+    //     return view('Admin.app-users-list', compact('users'));
+    // }
 
     public function account($id)
     {
@@ -33,31 +33,31 @@ class AdminAuthController extends Controller
         return view('Admin.app-users-add');
     }
 
-    public function create(Request $request)
-    {
-        $validatedData = $request->validate([
-            'first_name' => ['required', 'string', 'max:100'],
-            'last_name' => ['required', 'string', 'max:100'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
-            'phone' => ['nullable', 'string', 'max:15'],
-            'password' => ['required', 'string', Password::min(8)],
-            'role' => ['required', Rule::in([RoleEnum::STUDENT->value, RoleEnum::ACADEMIC->value])],
-            'gender' => ['required', Rule::in(['male', 'female'])],
-        ]);
+    // public function create(Request $request)
+    // {
+    //     $validatedData = $request->validate([
+    //         'first_name' => ['required', 'string', 'max:100'],
+    //         'last_name' => ['required', 'string', 'max:100'],
+    //         'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
+    //         'phone' => ['nullable', 'string', 'max:15'],
+    //         'password' => ['required', 'string', Password::min(8)],
+    //         'role' => ['required', Rule::in([RoleEnum::STUDENT->value, RoleEnum::ACADEMIC->value])],
+    //         'gender' => ['required', Rule::in(['male', 'female'])],
+    //     ]);
 
-        User::create([
-            'first_name' => $validatedData['first_name'],
-            'last_name' => $validatedData['last_name'],
-            'email' => $validatedData['email'],
-            'password' => Hash::make($validatedData['password']),
-            'phone' => $validatedData['phone'],
-            'role' => $validatedData['role'],
-            'gender' => $validatedData['gender'],
-            'email_verified_at' => now(),
-        ]);
+    //     User::create([
+    //         'first_name' => $validatedData['first_name'],
+    //         'last_name' => $validatedData['last_name'],
+    //         'email' => $validatedData['email'],
+    //         'password' => Hash::make($validatedData['password']),
+    //         'phone' => $validatedData['phone'],
+    //         'role' => $validatedData['role'],
+    //         'gender' => $validatedData['gender'],
+    //         'email_verified_at' => now(),
+    //     ]);
 
-        return redirect()->route('admin.list')->with('success', 'User created successfully!');
-    }
+    //     return redirect()->route('admin.list')->with('success', 'User created successfully!');
+    // }
 
     public function edit(Request $request)
     {

@@ -15,12 +15,9 @@ use App\Http\Controllers\Api\LikeController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\DeviceController;
-use App\Http\Controllers\Api\GeminiChatController;
 use App\Http\Controllers\Api\MessageController;
 use App\Http\Controllers\Api\PasswordResetController;
 use App\Http\Controllers\Api\TelegramWebhookController;
-use App\Http\Controllers\Api\BroadcastAuthController;
-use Illuminate\Support\Facades\Broadcast;
 
 /*
 |--------------------------------------------------------------------------
@@ -107,7 +104,12 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // --- مسارات الدردشة الخاصة ---
     Route::get('/conversations', [ConversationController::class, 'index']);
-    Route::post('/conversations', [ConversationController::class, 'store']);
+    // Route::post('/conversations', [ConversationController::class, 'store']);
     Route::get('/conversations/{conversation}/messages', [ConversationController::class, 'getMessages']);
-    Route::post('/conversations/{conversation}/messages', [ConversationController::class, 'sendMessage']);
+    // Route::post('/conversations/{conversation}/messages', [ConversationController::class, 'sendMessage']);
+    Route::post('/users/{recipient}/messages', [ConversationController::class, 'sendMessageToUser']);
+    Route::post('/conversations/{conversation}/messages', [ConversationController::class, 'sendMessageToConversation']);
+    // in routes/api.php
+
+    Route::post('/conversations/{conversation}/read', [ConversationController::class, 'markAsRead']);
 });

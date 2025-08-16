@@ -12,7 +12,10 @@ class ConversationResource extends JsonResource
     {
         // ابحث عن المشارك الآخر في المحادثة
         $otherParticipant = $this->participants->where('id', '!=', auth()->id())->first();
-
+        if (!$otherParticipant) {
+            return [];
+        }
+        // If the other participant exists, return their data as normal.
         return [
             'id' => $this->id,
             // معلومات الشخص الآخر
@@ -23,6 +26,8 @@ class ConversationResource extends JsonResource
             ],
             // آخر رسالة في المحادثة
             'last_message' => new PrivateMessageResource($this->whenLoaded('latestMessage')),
+            'unread_count' => $this->unread_count, // ✨ Add this line
+
             'updated_at' => $this->updated_at,
         ];
     }

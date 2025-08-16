@@ -9,6 +9,10 @@ use App\Models\User;
 | Broadcast Channels
 |--------------------------------------------------------------------------
 */
+// هذه القاعدة تسمح للمستخدم بالاستماع إلى قناته الشخصية فقط
+Broadcast::channel('App.Models.User.{id}', function ($user, $id) {
+    return (int) $user->id === (int) $id;
+});
 
 Broadcast::channel('chat.private.{conversationId}', function ($user, $conversationId) {
     // ابحث عن المحادثة
@@ -17,7 +21,7 @@ Broadcast::channel('chat.private.{conversationId}', function ($user, $conversati
     // إذا كانت المحادثة موجودة والمستخدم الحالي هو أحد المشاركين فيها،
     // قم بإرجاع `true` للسماح له بالاستماع إلى القناة.
     if ($conversation && $conversation->participants()->where('user_id', $user->id)->exists()) {
-        return true; 
+        return true;
     }
 
     // وإلا، امنعه من الاستماع

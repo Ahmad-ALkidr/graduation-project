@@ -95,7 +95,7 @@ class AuthController extends Controller
         $user->email_verified_at = Carbon::now();
 
         if ($tempImagePath && Storage::exists($tempImagePath)) {
-            $extension = pathinfo(storage_path('app/' . $tempImagePath), PATHINFO_EXTENSION);
+            $extension = pathinfo(storage::path('app/' . $tempImagePath), PATHINFO_EXTENSION);
             $permanentPath = 'profile_pictures/user_' . $user->id . '_' . time() . '.' . $extension;
             Storage::move($tempImagePath, 'public/' . $permanentPath);
             $user->profile_picture = $permanentPath;
