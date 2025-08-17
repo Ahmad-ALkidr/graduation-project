@@ -38,7 +38,6 @@ Route::post('/password/email', [PasswordResetController::class, 'sendResetOtp'])
 Route::post('/password/code/check', [PasswordResetController::class, 'verifyResetOtp']);
 Route::post('/password/reset', [PasswordResetController::class, 'resetPassword']);
 
-
 // --- المسارات العامة للمنشورات ---
 Route::get('/posts', [PostController::class, 'index']);
 Route::get('/posts/{post}', [PostController::class, 'show']);
@@ -46,14 +45,11 @@ Route::get('/posts/{post}/comments', [CommentController::class, 'index']);
 
 // --- مسار استقبال تحديثات بوت التلجرام ---
 // يجب أن يكون المسار سريًا بعض الشيء لمنع الوصول غير المصرح به
-Route::post('/telegram/webhook/'.env('TELEGRAM_BOT_TOKEN'), [TelegramWebhookController::class, 'handle']);
+Route::post('/telegram/webhook/' . env('TELEGRAM_BOT_TOKEN'), [TelegramWebhookController::class, 'handle']);
 Route::get('/announcements', [AnnouncementController::class, 'index']);
-
-
 
 // --- 2. المسارات المحمية (تتطلب تسجيل الدخول) ---
 Route::middleware('auth:sanctum')->group(function () {
-
     // المستخدم الحالي
     Route::get('/user', function (Request $request) {
         return $request->user();
@@ -91,7 +87,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/users/search/{query}', [UserController::class, 'search']);
     Route::get('/users/{user}/full-profile', [ProfileController::class, 'showFullProfile']);
 
-
     // --- مسارات مجموعات الدردشة ---
     Route::get('/chat-groups', [ChatGroupController::class, 'index']);
     Route::post('/chat-groups', [ChatGroupController::class, 'store']);
@@ -109,7 +104,11 @@ Route::middleware('auth:sanctum')->group(function () {
     // Route::post('/conversations/{conversation}/messages', [ConversationController::class, 'sendMessage']);
     Route::post('/users/{recipient}/messages', [ConversationController::class, 'sendMessageToUser']);
     Route::post('/conversations/{conversation}/messages', [ConversationController::class, 'sendMessageToConversation']);
-    // in routes/api.php
+
+    Route::delete('/conversations/{conversation}', [ConversationController::class, 'destroy']);
+    Route::delete('/messages/{message}', [ConversationController::class, 'destroyMessage']);
 
     Route::post('/conversations/{conversation}/read', [ConversationController::class, 'markAsRead']);
+    Route::post('/conversations/{conversation}/read', [ConversationController::class, 'markMessagesAsRead']);
+
 });

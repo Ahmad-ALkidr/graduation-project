@@ -3,87 +3,34 @@
 namespace App\Http\Controllers\Api;
 
 use App\Events\ConversationUpdated;
+use App\Events\MessagesRead;
 use App\Events\PrivateMessageSent;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ConversationResource;
 use App\Http\Resources\PrivateMessageResource;
+use App\Jobs\ProcessMessageNotification;
 use App\Models\Conversation;
+use App\Models\PrivateMessage;
 use App\Models\User;
+use App\Notifications\NewPrivateMessageNotification;
 use DB;
 use Illuminate\Http\Request;
+use Storage;
 
 class ConversationController extends Controller
 {
     /**
      * جلب كل المحادثات الخاصة بالمستخدم الحالي
      */
-    // في ConversationController.php
 
-    // in ConversationController.php
-
-public function index(Request $request)
+    public function index(Request $request)
     {
         $user = $request->user();
 
-        $conversations = $user->conversations()
-            ->with([
-                'participants' => fn($query) => $query->where('user_id', '!=', $user->id),
-                'latestMessage.sender'
-            ])
-            ->addSelect([
-                'unread_count' => DB::table('private_messages as pm')
-                    ->selectRaw('count(*)')
-                    ->whereColumn('pm.conversation_id', 'conversations.id')
-                    ->where('pm.sender_id', '!=', $user->id)
-                    ->where(function ($query) use ($user) {
-
-                        $lastReadQuery = DB::table('conversation_user as cu')
-                            ->select('cu.last_read_at')
-                            ->where('cu.user_id', $user->id)
-                            ->whereColumn('cu.conversation_id', 'conversations.id');
-
-                        // ✨ --- This is the final corrected logic block --- ✨
-
-                        // We convert the subquery to a raw SQL string and get its bindings
-                        $subQuerySql = $lastReadQuery->toSql();
-                        $subQueryBindings = $lastReadQuery->getBindings();
-
-                        // Now we use the raw SQL string in our conditions
-                        $query->whereRaw("pm.created_at > ({$subQuerySql})", $subQueryBindings)
-                              ->orWhereRaw("({$subQuerySql}) IS NULL", $subQueryBindings);
-                    })
-            ])
-            ->withMax('messages', 'created_at')
-            ->orderByDesc('messages_max_created_at')
-            ->get();
+        $conversations = $user->conversations()->withDetailsForUser($user)->get();
 
         return ConversationResource::collection($conversations);
     }
-    /**
-     * بدء محادثة جديدة أو جلب محادثة موجودة
-     */
-    // public function store(Request $request)
-    // {
-    //     $validated = $request->validate(['user_id' => 'required|integer|exists:users,id']);
-    //     $otherUserId = $validated['user_id'];
-    //     $currentUser = $request->user();
-
-    //     // ابحث عن محادثة موجودة بالفعل بين هذين المستخدمين
-    //     $conversation = $currentUser->conversations()
-    //         ->whereHas('participants', function ($query) use ($otherUserId) {
-    //             $query->where('user_id', $otherUserId);
-    //         })
-    //         ->first();
-
-    //     // إذا لم توجد محادثة، قم بإنشاء واحدة جديدة
-    //     if (!$conversation) {
-    //         $conversation = Conversation::create();
-    //         $conversation->participants()->attach([$currentUser->id, $otherUserId]);
-    //     }
-
-    //     return new ConversationResource($conversation->load('participants'));
-    // }
-
     /**
      * جلب كل الرسائل في محادثة معينة
      */
@@ -92,164 +39,164 @@ public function index(Request $request)
         // تأكد من أن المستخدم الحالي هو جزء من هذه المحادثة
         $this->authorize('view', $conversation);
 
-        $query = $conversation->messages()->with('sender')->latest();
+        $query = $conversation->messages()
+            ->with(['sender' => function($query) {
+                $query->select('id', 'first_name', 'last_name', 'profile_picture');
+            }])
+            ->latest();
 
         // إذا قام التطبيق بإرسال 'before_id'، اجلب الرسائل الأقدم فقط
         if ($request->has('before_id')) {
             $query->where('id', '<', $request->input('before_id'));
         }
 
-        // جلب 50 رسالة فقط في كل مرة
-        $messages = $query->limit(50)->get();
+        // إذا قام التطبيق بإرسال 'after_id'، اجلب الرسائل الأحدث فقط
+        if ($request->has('after_id')) {
+            $query->where('id', '>', $request->input('after_id'));
+        }
 
-        // هذا الرد سيعيد فقط مصفوفة بالرسائل داخل مفتاح "data"
+        // جلب عدد الرسائل المطلوب (افتراضي 50)
+        $limit = min($request->input('limit', 50), 100); // حد أقصى 100 رسالة
+        $messages = $query->limit($limit)->get();
+
+        // تحديث آخر قراءة للمستخدم
+        $conversation->participants()->updateExistingPivot($request->user()->id, [
+            'last_read_at' => now(),
+        ]);
+
         return PrivateMessageResource::collection($messages);
     }
 
-    /**
-     * إرسال رسالة جديدة في محادثة
-     */
-    // public function sendMessage(Request $request, Conversation $conversation)
-    // {
-    //     $this->authorize('view', $conversation);
-
-    //     $validated = $request->validate(['content' => 'required|string']);
-
-    //     $message = $conversation->messages()->create([
-    //         'sender_id' => $request->user()->id,
-    //         'content' => $validated['content'],
-    //     ]);
-
-    //     $message->load('sender');
-    //     $conversation->load('participants', 'latestMessage.sender');
-
-    //     // بث الرسالة الجديدة للمشاركين الآخرين
-    //     broadcast(new PrivateMessageSent($message))->toOthers();
-    //     broadcast(new ConversationUpdated($conversation));
-
-    //     return new PrivateMessageResource($message);
-    // }
     public function sendMessageToUser(Request $request, User $recipient)
     {
-        $validated = $request->validate(['content' => 'required|string|max:10000']);
+        $validated = $request->validate([
+            'content' => 'required_without:attachment|nullable|string|max:10000',
+            'type' => 'required|string|in:text,image,video,audio,file',
+            'attachment' => 'required_if:type,image,video,audio,file|nullable|file|max:20480',
+        ]);
+
         $currentUser = $request->user();
 
-        // منع المستخدم من مراسلة نفسه
         if ($currentUser->id === $recipient->id) {
-            return response()->json(['message' => 'لا يمكنك إرسال رسالة لنفسك.'], 422);
+            return response()->json(['message' => 'You cannot send a message to yourself.'], 422);
         }
 
-        // ابحث عن محادثة موجودة بين هذين المستخدمين فقط
-        $conversation = Conversation::whereHas('participants', function ($query) use ($currentUser) {
-            $query->where('user_id', $currentUser->id);
-        })
-            ->whereHas('participants', function ($query) use ($recipient) {
-                $query->where('user_id', $recipient->id);
-            })
-            ->whereHas('participants', null, '=', 2) // تأكد من أنها تحتوي على مشاركين اثنين فقط
-            ->first();
+        // تحسين الاستعلام باستخدام cache
+        $conversation = cache()->remember(
+            "conversation_{$currentUser->id}_{$recipient->id}",
+            300, // 5 دقائق
+            function () use ($currentUser, $recipient) {
+                return Conversation::query()
+                    ->whereHas('participants', fn($q) => $q->where('user_id', $currentUser->id))
+                    ->whereHas('participants', fn($q) => $q->where('user_id', $recipient->id))
+                    ->whereHas('participants', null, '=', 2)
+                    ->first();
+            }
+        );
 
-        // إذا لم توجد محادثة، قم بإنشاء واحدة جديدة
         if (!$conversation) {
             $conversation = Conversation::create();
             $conversation->participants()->attach([$currentUser->id, $recipient->id]);
+            
+            // تحديث cache
+            cache()->put("conversation_{$currentUser->id}_{$recipient->id}", $conversation, 300);
         }
 
-        // الآن، قم بإنشاء الرسالة داخل هذه المحادثة
+        $messageContent = $validated['content'] ?? null;
+
+        // معالجة الملفات المرفقة
+        if ($request->hasFile('attachment')) {
+            $file = $request->file('attachment');
+            
+            // التحقق من نوع الملف
+            $allowedTypes = [
+                'image' => ['jpg', 'jpeg', 'png', 'gif', 'webp'],
+                'video' => ['mp4', 'avi', 'mov', 'wmv'],
+                'audio' => ['mp3', 'wav', 'ogg', 'aac'],
+                'file' => ['pdf', 'doc', 'docx', 'txt', 'zip', 'rar']
+            ];
+            
+            $fileExtension = strtolower($file->getClientOriginalExtension());
+            if (!in_array($fileExtension, $allowedTypes[$validated['type']] ?? [])) {
+                return response()->json(['message' => 'Invalid file type for this message type.'], 422);
+            }
+            
+            $path = $file->store('attachments', 'public');
+            $messageContent = $path;
+        }
+
+        // إنشاء الرسالة
         $message = $conversation->messages()->create([
             'sender_id' => $currentUser->id,
-            'content' => $validated['content'],
+            'content' => $messageContent,
+            'type' => $validated['type'],
+            'is_read' => false,
         ]);
 
         $message->load('sender');
 
-        // بث الرسالة الجديدة لحظيًا إلى قناة المحادثة
-        broadcast(new PrivateMessageSent($message))->toOthers();
+        // بث الأحداث بشكل متوازي لتحسين الأداء
+        try {
+            // بث حدث الرسالة الجديدة
+            broadcast(new PrivateMessageSent($message))->toOthers();
 
-        // بث تحديث لقائمة محادثات كلا المستخدمين
-        broadcast(new ConversationUpdated($conversation));
-
-        // إرجاع الرسالة الجديدة ومعرّف المحادثة
-        return response()->json(
-            [
-                'message' => new PrivateMessageResource($message),
-                'conversation_id' => $conversation->id,
-            ],
-            201,
-        );
-    }
-    public function addMessageToConversion(Request $request, User $recipient)
-    {
-        $validated = $request->validate(['content' => 'required|string|max:10000']);
-        $currentUser = $request->user();
-
-        // منع المستخدم من مراسلة نفسه
-        if ($currentUser->id === $recipient->id) {
-            return response()->json(['message' => 'لا يمكنك إرسال رسالة لنفسك.'], 422);
+            // بث حدث تحديث المحادثة
+            $recipientUser = $conversation->participants->where('id', '!=', $currentUser->id)->first();
+            if ($recipientUser) {
+                broadcast(new ConversationUpdated($conversation, $recipientUser))->toOthers();
+                
+                // إرسال الإشعار في الخلفية باستخدام Job
+                ProcessMessageNotification::dispatch($message, $recipientUser->id);
+            }
+        } catch (\Exception $e) {
+            // تسجيل الخطأ ولكن لا نوقف العملية
+            \Log::error('Broadcasting error: ' . $e->getMessage());
         }
 
-        $conversation = Conversation::create();
-        $conversation->participants()->attach([$currentUser->id, $recipient->id]);
-
-        // الآن، قم بإنشاء الرسالة داخل هذه المحادثة
-        $message = $conversation->messages()->create([
-            'sender_id' => $currentUser->id,
-            'content' => $validated['content'],
-        ]);
-
-        $message->load('sender');
-
-        // بث الرسالة الجديدة لحظيًا إلى قناة المحادثة
-        broadcast(new PrivateMessageSent($message))->toOthers();
-
-        // بث تحديث لقائمة محادثات كلا المستخدمين
-        broadcast(new ConversationUpdated($conversation));
-
-        // إرجاع الرسالة الجديدة ومعرّف المحادثة
-        return response()->json(
-            [
-                'message' => new PrivateMessageResource($message),
-                'conversation_id' => $conversation->id,
-            ],
-            201,
-        );
+        return response()->json([
+            'message' => new PrivateMessageResource($message),
+            'conversation_id' => $conversation->id,
+        ], 201);
     }
-    public function sendMessageToConversation(Request $request, Conversation $conversation)
+    /**
+     * حذف محادثة معينة.
+     */
+    public function destroy(Request $request, Conversation $conversation)
     {
-        // 1. التحقق من الصلاحية: هل المستخدم الحالي عضو في هذه المحادثة؟
-        // هذا السطر هو أهم سطر أمني في الدالة لمنع أي شخص من إرسال
-        // رسائل لمحادثات لا يشارك فيها.
+        // 1. التحقق الأمني: تأكد من أن المستخدم الحالي هو أحد المشاركين في المحادثة
         $this->authorize('view', $conversation);
 
-        // 2. التحقق من مدخلات الطلب
-        $validated = $request->validate([
-            'content' => 'required|string|max:10000',
-        ]);
+        // 2. قم بحذف المحادثة
+        // سيقوم onDelete('cascade') في قاعدة البيانات بحذف كل الرسائل المرتبطة تلقائيًا
+        $conversation->delete();
 
-        // 3. إنشاء الرسالة الجديدة
-        $message = $conversation->messages()->create([
-            'sender_id' => $request->user()->id,
-            'content' => $validated['content'],
-        ]);
+        // 3. أعد رسالة نجاح
+        return response()->json(['message' => 'Conversation deleted successfully.']);
+    }
+    /**
+     * Delete a specific message.
+     */
+    public function destroyMessage(Request $request, PrivateMessage $message)
+    {
+        // 1. Security Check: Use the policy to ensure only the sender can delete.
+        // This will automatically return a 403 Forbidden error if the check fails.
+        $this->authorize('delete', $message);
 
-        // تحميل بيانات المرسل مع الرسالة لإعادتها في الرد
-        $message->load('sender');
+        // 2. If the message was a file, delete the file from storage.
+        if ($message->type !== 'text' && $message->content) {
+            Storage::disk('public')->delete($message->content);
+        }
 
-        // 4. بث الرسالة لحظيًا للمشاركين الآخرين في المحادثة
-        broadcast(new PrivateMessageSent($message))->toOthers();
+        // 3. Delete the message record from the database.
+        $message->delete();
 
-        // 5. بث تحديث للمحادثة نفسها (لتظهر في أعلى قائمة المحادثات عند الجميع)
-        broadcast(new ConversationUpdated($conversation->load('participants', 'latestMessage.sender')));
+        // (Optional but recommended) Broadcast an event so the message disappears in real-time.
+        // broadcast(new MessageDeleted($message->id, $message->conversation_id))->toOthers();
 
-        // 6. إرجاع بيانات الرسالة الجديدة كاستجابة
-        return new PrivateMessageResource($message);
+        // 4. Return a success response.
+        return response()->json(['message' => 'Message deleted successfully.']);
     }
 
-    // in ConversationController.php
-
-    /**
-     * Mark a conversation as read for the current user.
-     */
     public function markAsRead(Request $request, Conversation $conversation)
     {
         $this->authorize('view', $conversation); // Ensure the user is a participant
@@ -259,5 +206,47 @@ public function index(Request $request)
         ]);
 
         return response()->json(['message' => 'Conversation marked as read.']);
+    }
+    /**
+     * Mark specific messages as read (for the "seen" checkmarks).
+     */
+    public function markMessagesAsRead(Request $request, Conversation $conversation)
+    {
+        $this->authorize('view', $conversation);
+
+        $user = $request->user();
+
+        // استخدام batch update لتحسين الأداء
+        $updatedCount = $conversation->messages()
+            ->where('sender_id', '!=', $user->id)
+            ->where('is_read', false)
+            ->update(['is_read' => true]);
+
+        if ($updatedCount > 0) {
+            // جلب IDs الرسائل المحدثة للبث
+            $messageIds = $conversation->messages()
+                ->where('sender_id', '!=', $user->id)
+                ->where('is_read', true)
+                ->where('updated_at', '>=', now()->subSeconds(5)) // الرسائل المحدثة في آخر 5 ثواني
+                ->pluck('id')
+                ->toArray();
+
+            if (!empty($messageIds)) {
+                // بث الحدث في الخلفية
+                dispatch(function () use ($messageIds, $conversation) {
+                    broadcast(new MessagesRead($messageIds, $conversation->id))->toOthers();
+                })->afterResponse();
+            }
+        }
+
+        // تحديث آخر قراءة في جدول المشاركين
+        $conversation->participants()->updateExistingPivot($user->id, [
+            'last_read_at' => now(),
+        ]);
+
+        return response()->json([
+            'message' => 'Messages marked as read.',
+            'updated_count' => $updatedCount
+        ]);
     }
 }

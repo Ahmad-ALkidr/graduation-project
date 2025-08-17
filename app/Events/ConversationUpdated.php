@@ -4,6 +4,7 @@ namespace App\Events;
 
 use App\Http\Resources\ConversationResource;
 use App\Models\Conversation;
+use App\Models\User;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
@@ -15,10 +16,12 @@ class ConversationUpdated implements ShouldBroadcast
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
     public Conversation $conversation;
+    public User $recipient;
 
-    public function __construct(Conversation $conversation)
+    public function __construct(Conversation $conversation, User $recipient)
     {
         $this->conversation = $conversation;
+        $this->recipient = $recipient;
     }
 
     public function broadcastOn(): array
@@ -38,7 +41,14 @@ class ConversationUpdated implements ShouldBroadcast
 
     public function broadcastWith(): array
     {
+        // Re-fetch a "fresh" copy of the conversation for the recipient
+        // at the exact moment of broadcasting.
+        $freshConversation = Conversation::where('id', $this->conversation->id)
+            ->withDetailsForUser($this->recipient) // Using the scope
+            ->first();
+        // If for some reason it's not found, fall back to the original
+        $conversationToSend = $freshConversation ?: $this->conversation;
         // إرسال بيانات المحادثة المحدثة (مع آخر رسالة)
-        return ['conversation' => new ConversationResource($this->conversation->load('latestMessage.sender', 'participants'))];
+        return ['conversation' => new ConversationResource($conversationToSend)];
     }
 }
