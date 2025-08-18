@@ -71,5 +71,6 @@ class Kernel extends HttpKernel
         'check.user' => \App\Http\Middleware\CheckUserMiddleware::class,
         'auth.admin' => \Illuminate\Auth\Middleware\Authenticate::class,
         'guest.admin' => \App\Http\Middleware\RedirectIfAuthenticated::class,
+        'rate.limit.messages' => \App\Http\Middleware\RateLimitMessages::class,
     ];
 }

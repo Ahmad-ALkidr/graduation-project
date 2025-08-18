@@ -34,14 +34,21 @@ class DashboardController extends Controller
 
         $postChartLabels = [];
         $postChartData = [];
+
+        // تحسين: استخدام استعلام واحد بدلاً من حلقة
+        $postStats = Post::selectRaw('DATE(created_at) as date, COUNT(*) as count')
+            ->whereBetween('created_at', [now()->subDays(6), now()])
+            ->groupBy('date')
+            ->pluck('count', 'date')
+            ->toArray();
+
+        // ملء البيانات للأيام السبعة الماضية
         for ($i = 6; $i >= 0; $i--) {
-            // Get the date for each of the last 7 days
             $date = today()->subDays($i);
-            // Add the day's name (e.g., "Sat") to the labels array
             $postChartLabels[] = $date->format('D');
-            // Count how many posts were created on that specific date and add it to the data array
-            $postChartData[] = Post::whereDate('created_at', $date)->count();
+            $postChartData[] = $postStats[$date->format('Y-m-d')] ?? 0;
         }
+
         // Convert the arrays to JSON to be easily used by JavaScript
         $postChartLabels = json_encode($postChartLabels);
         $postChartData = json_encode($postChartData);
@@ -72,11 +79,24 @@ class DashboardController extends Controller
         // 1. User Growth Rate (Last 4 Weeks)
         $userGrowthLabels = [];
         $userGrowthData = [];
+
+// Get the start of the period (4 weeks ago) and the end (now)
+$startDate = now()->subWeeks(3)->startOfWeek();
+$endDate = now()->endOfWeek();
+
+
+// ✨ --- This is the corrected query for PostgreSQL --- ✨
+$userGrowthStats = User::select(DB::raw("to_char(created_at, 'YYYY-IW') as week, COUNT(*) as count"))
+    ->whereBetween('created_at', [$startDate, $endDate])
+    ->groupBy('week')
+    ->orderBy('week')
+    ->pluck('count', 'week');
+
         for ($i = 3; $i >= 0; $i--) {
             $weekStartDate = now()->subWeeks($i)->startOfWeek();
-            $weekEndDate = now()->subWeeks($i)->endOfWeek();
+            $weekKey = $weekStartDate->format('YW');
             $userGrowthLabels[] = 'Week ' . $weekStartDate->format('W');
-            $userGrowthData[] = User::whereBetween('created_at', [$weekStartDate, $weekEndDate])->count();
+            $userGrowthData[] = $userGrowthStats[$weekKey] ?? 0;
         }
 
         $userGrowthLabels = json_encode($userGrowthLabels);

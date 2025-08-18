@@ -15,6 +15,7 @@ use App\Http\Controllers\Api\LikeController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\DeviceController;
+use App\Http\Controllers\Api\FeedbackController;
 use App\Http\Controllers\Api\MessageController;
 use App\Http\Controllers\Api\PasswordResetController;
 use App\Http\Controllers\Api\TelegramWebhookController;
@@ -102,13 +103,17 @@ Route::middleware('auth:sanctum')->group(function () {
     // Route::post('/conversations', [ConversationController::class, 'store']);
     Route::get('/conversations/{conversation}/messages', [ConversationController::class, 'getMessages']);
     // Route::post('/conversations/{conversation}/messages', [ConversationController::class, 'sendMessage']);
-    Route::post('/users/{recipient}/messages', [ConversationController::class, 'sendMessageToUser']);
-    Route::post('/conversations/{conversation}/messages', [ConversationController::class, 'sendMessageToConversation']);
+    Route::post('/users/{recipient}/messages', [ConversationController::class, 'sendMessageToUser'])->middleware('rate.limit.messages');
+    Route::post('/conversations/{conversation}/messages', [ConversationController::class, 'sendMessageToConversation'])->middleware('rate.limit.messages');
 
     Route::delete('/conversations/{conversation}', [ConversationController::class, 'destroy']);
     Route::delete('/messages/{message}', [ConversationController::class, 'destroyMessage']);
 
-    Route::post('/conversations/{conversation}/read', [ConversationController::class, 'markAsRead']);
+    // Route::post('/conversations/{conversation}/read', [ConversationController::class, 'markAsRead']);
     Route::post('/conversations/{conversation}/read', [ConversationController::class, 'markMessagesAsRead']);
+    // This route checks if a conversation exists with a user and returns the ID
+    Route::get('/users/{recipient}/conversation', [ConversationController::class, 'findConversationWithUser']);
+    // الشكاوي والاقتراحات
+    Route::post('/feedback', [FeedbackController::class, 'store']);
 
 });

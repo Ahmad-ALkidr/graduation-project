@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Support\Facades\DB;
 
 class User extends Authenticatable implements MustVerifyEmail
 {
@@ -58,6 +59,26 @@ class User extends Authenticatable implements MustVerifyEmail
 
         return null;
     }
+
+    /**
+     * Get the full name of the user.
+     */
+    public function getFullNameAttribute()
+    {
+        return $this->first_name . ' ' . $this->last_name;
+    }
+
+    /**
+     * Scope for searching users by name.
+     */
+    public function scopeSearch($query, $search)
+    {
+        return $query->where(function($q) use ($search) {
+            $q->where('first_name', 'LIKE', "%{$search}%")
+              ->orWhere('last_name', 'LIKE', "%{$search}%")
+              ->orWhere(DB::raw("CONCAT(first_name, ' ', last_name)"), 'LIKE', "%{$search}%");
+        });
+    }
     /**
      * Send the password reset notification.
      *
@@ -88,7 +109,7 @@ class User extends Authenticatable implements MustVerifyEmail
     public function hasRole(RoleEnum|string $role): bool
 {
     if (is_string($role)) {
-        $role = RoleEnum::from($role); 
+        $role = RoleEnum::from($role);
     }
 
     return $this->role === $role;
@@ -142,5 +163,10 @@ class User extends Authenticatable implements MustVerifyEmail
     public function conversations()
     {
         return $this->belongsToMany(Conversation::class, 'conversation_user')->withTimestamps();
+    }
+
+        public function feedback()
+    {
+        return $this->hasMany(Feedback::class);
     }
 }

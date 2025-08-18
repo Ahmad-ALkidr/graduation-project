@@ -39,6 +39,7 @@ return [
                 'useTLS' => true,
             ],
             'client_options' => [
+                'queue' => false, // This will make broadcasts happen immediately
                 // Guzzle client options: https://docs.guzzlephp.org/en/stable/request-options.html
             ],
         ],

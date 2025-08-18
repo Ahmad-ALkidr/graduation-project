@@ -20,9 +20,15 @@ class CommentController extends Controller
     /**
      * عرض كل التعليقات على منشور معين
      */
-    public function index(Post $post)
+    public function index(Request $request, Post $post)
     {
-        $comments = $post->comments()->with('user')->latest()->get();
+        $perPage = min($request->input('per_page', 20), 50);
+
+        $comments = $post->comments()
+            ->with('user')
+            ->latest()
+            ->paginate($perPage);
+
         return CommentResource::collection($comments);
     }
 

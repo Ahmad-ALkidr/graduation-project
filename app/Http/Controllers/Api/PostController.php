@@ -15,12 +15,16 @@ class PostController extends Controller
     /**
      * عرض كل المنشورات بشكل عام للجميع
      */
-    public function index()
+    public function index(Request $request)
     {
-        $posts = Post::with('user') // جلب بيانات كاتب المنشور
-            ->withCount('likers') // حساب عدد الإعجابات لكل منشور
-            ->latest() // ترتيب المنشورات من الأحدث للأقدم
-            ->get(); // جلب كل النتائج بدون تقسيم صفحات
+        $perPage = min($request->input('per_page', 20), 50); // حد أقصى 50 منشور
+
+        $posts = Post::with(['user', 'likers' => function($query) {
+            $query->where('user_id', auth()->id());
+        }])
+        ->withCount(['likers', 'comments'])
+        ->latest()
+        ->paginate($perPage);
 
         return PostResource::collection($posts);
     }

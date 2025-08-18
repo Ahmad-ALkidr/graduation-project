@@ -61,5 +61,5 @@ class Conversation extends Model
             ])
             ->withMax('messages', 'created_at')
             ->orderBy('messages_max_created_at');
-    }   
+    }
 }

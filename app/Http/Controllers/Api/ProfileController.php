@@ -102,10 +102,12 @@ class ProfileController extends Controller
     /**
      * دالة لجلب كل المناشير الخاصة بمستخدم معين
      */
-    public function getUserPosts(User $user)
+    public function getUserPosts(Request $request, User $user)
     {
+        $perPage = min($request->input('per_page', 20), 50);
+        
         // نفترض أن لديك علاقة 'posts' في موديل User
-        $posts = $user->posts()->with('user')->latest()->get();
+        $posts = $user->posts()->with('user')->latest()->paginate($perPage);
 
         return PostResource::collection($posts);
     }
@@ -113,14 +115,16 @@ class ProfileController extends Controller
     /**
      * دالة لجلب كل الملفات المعتمدة التي رفعها مستخدم معين في المكتبة
      */
-    public function getUserLibraryFiles(User $user)
+    public function getUserLibraryFiles(Request $request, User $user)
     {
+        $perPage = min($request->input('per_page', 15), 50);
+
         // جلب طلبات الكتب المعتمدة فقط لهذا المستخدم
         $files = $user->bookRequests()
             ->where('status', 'approved')
             ->with('course.subject:id,name') // جلب بيانات مفيدة عن المادة
             ->latest()
-            ->paginate(15);
+            ->paginate($perPage);
 
         return response()->json($files);
     }

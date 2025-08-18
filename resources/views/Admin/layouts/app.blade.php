@@ -90,22 +90,24 @@
         <!-- Menu -->
 
         <aside id="layout-menu" class="layout-menu menu-vertical menu bg-menu-theme">
-            <div class="app-brand demo">
-                <a href="{{ route('admin.dashboard') }}" class="app-brand-link">
-                    <img src="{{ $adminData->profile_picture
-                                        ? asset('storage/' . $adminData->profile_picture)
-                                        : ($adminData->gender == 'male'
-                                            ? asset('assets/img/avatars/14.png')
-                                            : asset('assets/img/avatars/16.png')) }}" alt="Logo" width="50px"/>
-                    <span class="app-brand-text  menu-text fw-bold">Manager's panel</span>
-                </a>
+<div class="app-brand demo">
+    <a href="{{ route('admin.dashboard') }}" class="app-brand-link d-flex align-items-center gap-2">
 
-                <a href="javascript:void(0);" class="layout-menu-toggle menu-link text-large ms-auto">
-                    <i class="ti menu-toggle-icon d-none d-xl-block ti-sm align-middle"
-                       style="background-color: white; color: black"></i>
-                    <i class="ti ti-x d-block d-xl-none ti-sm align-middle"></i>
-                </a>
-            </div>
+        <img src="{{ asset('storage/profile_pictures/logo_ShamUnity.png') }}"
+             alt="Logo"
+             width="100"
+             height="100"
+             class="rounded-circle"/>
+
+        <span class="app-brand-text menu-text fw-bold">Dashboard</span>
+
+    </a>
+
+    <a href="javascript:void(0);" class="layout-menu-toggle menu-link text-large ms-auto">
+        <i class="ti menu-toggle-icon d-none d-xl-block ti-sm align-middle"></i>
+        <i class="ti ti-x d-block d-xl-none ti-sm align-middle"></i>
+    </a>
+</div>
 
             <div class="menu-inner-shadow"></div>
 
@@ -140,12 +142,34 @@
                     <li class="menu-item {{ request()->routeIs('admin.users.list.academics') ? 'active' : '' }}">
                         <a href="{{ route('admin.users.list.academics') }}" class="menu-link">
                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="#FFFFFF" class="bi bi-briefcase-fill menu-icon tf-icons ti ti-smart-home" viewBox="0 0 16 16">
-                <path d="M6.5 1A1.5 1.5 0 0 0 5 2.5V3h6v-.5A1.5 1.5 0 0 0 9.5 1h-3z"/>
-                <path d="M0 4.5A1.5 1.5 0 0 1 1.5 3h13A1.5 1.5 0 0 1 16 4.5v8a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 0 12.5v-8zM7.5 7a.5.5 0 0 0-1 0v1h1V7zm2 0a.5.5 0 0 0-1 0v1h1V7zm2 0a.5.5 0 0 0-1 0v1h1V7z"/>
-            </svg>
-            <div data-i18n="Academics">Academics</div>
-        </a>
-    </li>
+                                <path d="M6.5 1A1.5 1.5 0 0 0 5 2.5V3h6v-.5A1.5 1.5 0 0 0 9.5 1h-3z"/>
+                                <path d="M0 4.5A1.5 1.5 0 0 1 1.5 3h13A1.5 1.5 0 0 1 16 4.5v8a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 0 12.5v-8zM7.5 7a.5.5 0 0 0-1 0v1h1V7zm2 0a.5.5 0 0 0-1 0v1h1V7zm2 0a.5.5 0 0 0-1 0v1h1V7z"/>
+                            </svg>
+                            <div data-i18n="Academics">Academics</div>
+                        </a>
+                    </li>
+<!-- Library Management Dropdown -->
+<li class="menu-item {{ request()->routeIs('admin.library.*') ? 'open active' : '' }}">
+    <a href="javascript:void(0);" class="menu-link menu-toggle">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-file-earmark-check-fill menu-icon tf-icons" viewBox="0 0 16 16">
+            <path d="M9.293 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V4.707A1 1 0 0 0 13.707 4L10 .293A1 1 0 0 0 9.293 0M9.5 3.5v-2l3 3h-2a1 1 0 0 1-1-1m-1.45 6.854-2.5-2.5a.5.5 0 0 1 .708-.708L7.5 8.793l1.646-1.647a.5.5 0 0 1 .708.708l-2 2a.5.5 0 0 1-.708 0"/>
+        </svg>
+        <div data-i18n="Library Files">Library Files</div>
+    </a>
+    <ul class="menu-sub">
+        <li class="menu-item {{ request()->routeIs('admin.users.library.pending') ? 'active' : '' }}">
+            <a href="{{ route('admin.users.library.pending') }}" class="menu-link">
+                <div data-i18n="Pending Files">Pending Files</div>
+            </a>
+        </li>
+        <li class="menu-item {{ request()->routeIs('admin.users.library.approved') ? 'active' : '' }}">
+            <a href="{{ route('admin.users.library.approved') }}" class="menu-link">
+                <div data-i18n="Approved Files">Approved Files</div>
+            </a>
+        </li>
+    </ul>
+</li>
+<!--/ Library Management Dropdown -->
                     <!--/ admins -->
 
 
@@ -615,7 +639,7 @@
     @foreach ($errors->all() as $error)
         errorMessage += "{{ $error }}" + "<br>"; @endforeach
     toastr.error(errorMessage);
-             @endif
+                  @endif
     </script>
 
     @stack('scripts')

@@ -14,7 +14,10 @@ class CollegeController extends Controller
      */
     public function index()
     {
-        $colleges = College::with('departments')->get();
+        $colleges = cache()->remember('all_colleges', 3600, function () {
+            return College::with('departments')->get();
+        });
+
         return response()->json($colleges);
     }
 

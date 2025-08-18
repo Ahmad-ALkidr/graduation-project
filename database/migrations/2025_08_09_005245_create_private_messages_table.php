@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('conversation_id')->constrained('conversations')->onDelete('cascade');
             $table->foreignId('sender_id')->constrained('users')->onDelete('cascade');
             $table->text('content');
-            $table->enum('type', ['text', 'image'])->default('text');
+            $table->enum('type', ['text', 'image', 'video', 'audio', 'file'])->default('text');
             $table->timestamps();
         });
     }

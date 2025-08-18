@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Validator;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\DB;
 use Ichtrojan\Otp\Otp;
 use Storage;
 
@@ -91,18 +92,22 @@ class AuthController extends Controller
         $tempImagePath = $registrationData['temp_image_path'] ?? null;
         unset($registrationData['temp_image_path']);
 
-        $user = User::create($registrationData);
-        $user->email_verified_at = Carbon::now();
+        $user = DB::transaction(function () use ($registrationData, $tempImagePath, $request) {
+            $user = User::create($registrationData);
+            $user->email_verified_at = Carbon::now();
 
-        if ($tempImagePath && Storage::exists($tempImagePath)) {
-            $extension = pathinfo(storage::path('app/' . $tempImagePath), PATHINFO_EXTENSION);
-            $permanentPath = 'profile_pictures/user_' . $user->id . '_' . time() . '.' . $extension;
-            Storage::move($tempImagePath, 'public/' . $permanentPath);
-            $user->profile_picture = $permanentPath;
-        }
+            if ($tempImagePath && Storage::exists($tempImagePath)) {
+                $extension = pathinfo(storage::path('app/' . $tempImagePath), PATHINFO_EXTENSION);
+                $permanentPath = 'profile_pictures/user_' . $user->id . '_' . time() . '.' . $extension;
+                Storage::move($tempImagePath, 'public/' . $permanentPath);
+                $user->profile_picture = $permanentPath;
+            }
 
-        $user->save();
-        Cache::forget('registration_data_' . $request->email);
+            $user->save();
+            Cache::forget('registration_data_' . $request->email);
+
+            return $user;
+        });
 
         $token = $user->createToken('auth_token', ['*'], now()->addWeeks(2))->plainTextToken;
 

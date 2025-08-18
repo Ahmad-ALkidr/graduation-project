@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\LibraryManagementController;
 use App\Http\Controllers\Admin\manage_users\AdminAuthController;
 use App\Http\Controllers\Admin\manage_users\AdminController;
 use App\Http\Controllers\Admin\manage_users\UserManagementController;
@@ -61,6 +62,21 @@ Route::prefix('users')->name('admin.users.')->controller(UserManagementControlle
 
     // ✨ --- NEW: Route for academics --- ✨
     Route::get('/academics', 'show_academics')->name('list.academics');
+
+    // مسارات إدارة ملفات المكتبة
+    Route::get('/library/pending', [LibraryManagementController::class, 'showPendingFiles'])->name('library.pending');
+    Route::post('/approve/{file}', [LibraryManagementController::class, 'approve'])->name('library.approve');
+    Route::post('/delete/{file}', [LibraryManagementController::class, 'destroy'])->name('library.delete');
+    Route::get('/download/{file}', [LibraryManagementController::class, 'downloadFile'])->name('library.download');
+    // ✨ --- for viewing the file --- ✨
+    Route::get('/view/{file}', [LibraryManagementController::class, 'viewFile'])->name('library.view');
+    // ✨ --- for approved files --- ✨
+    Route::get('/approved', [LibraryManagementController::class, 'showApprovedFiles'])->name('library.approved');
+
+
+
+
+
 
     // You might want a separate route for the password change form/handler
     // Route::post('/account/change-password/{user}', 'change_password')->name('change-password');

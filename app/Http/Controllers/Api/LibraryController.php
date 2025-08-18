@@ -17,7 +17,11 @@ class LibraryController extends Controller
      */
     public function getColleges()
     {
-        return response()->json(College::all());
+        return response()->json(
+            cache()->remember('colleges', 3600, function () {
+                return College::all();
+            })
+        );
     }
 
     /**
@@ -25,7 +29,11 @@ class LibraryController extends Controller
      */
     public function getDepartments(College $college)
     {
-        return response()->json($college->departments);
+        return response()->json(
+            cache()->remember("college_{$college->id}_departments", 3600, function () use ($college) {
+                return $college->departments;
+            })
+        );
     }
 
     /**
@@ -33,12 +41,14 @@ class LibraryController extends Controller
      */
     public function getCourseOptions(Department $department)
     {
-        $options = Course::where('department_id', $department->id)
-            ->select('year', 'semester')
-            ->distinct()
-            ->get();
-
-        return response()->json($options);
+        return response()->json(
+            cache()->remember("department_{$department->id}_options", 1800, function () use ($department) {
+                return Course::where('department_id', $department->id)
+                    ->select('year', 'semester')
+                    ->distinct()
+                    ->get();
+            })
+        );
     }
 
     /**

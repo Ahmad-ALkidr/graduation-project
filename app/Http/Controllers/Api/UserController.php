@@ -19,22 +19,15 @@ class UserController extends Controller
             return response()->json(['data' => []]);
         }
 
-        $searchQuery = $query;
-
-        $users = User::where(function ($query) use ($searchQuery) {
-                $query->where('first_name', 'ILIKE', "{$searchQuery}%")
-                      ->orWhere('last_name', 'ILIKE', "{$searchQuery}%")
-                      ->orWhere(DB::raw("CONCAT(first_name, ' ', last_name)"), 'ILIKE', "{$searchQuery}%");
-            })
+        $users = User::search($query)
             ->where('id', '!=', auth()->id())
-            // نقوم بترتيب النتائج حسب الأولوية
             ->orderByRaw(
                 "CASE
-                    WHEN first_name ILIKE ? THEN 1
-                    WHEN last_name ILIKE ? THEN 2
+                    WHEN first_name LIKE ? THEN 1
+                    WHEN last_name LIKE ? THEN 2
                     ELSE 3
                 END",
-                ["{$searchQuery}%", "{$searchQuery}%"]
+                ["{$query}%", "{$query}%"]
             )
             ->limit(10)
             ->get();
