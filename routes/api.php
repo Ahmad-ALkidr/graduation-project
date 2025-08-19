@@ -46,7 +46,8 @@ Route::get('/posts/{post}/comments', [CommentController::class, 'index']);
 
 // --- مسار استقبال تحديثات بوت التلجرام ---
 // يجب أن يكون المسار سريًا بعض الشيء لمنع الوصول غير المصرح به
-Route::post('/telegram/webhook/' . env('TELEGRAM_BOT_TOKEN'), [TelegramWebhookController::class, 'handle']);
+// Route::post('/telegram/webhook/' . env('TELEGRAM_BOT_TOKEN'), [TelegramWebhookController::class, 'handle']);
+Route::post('/telegram/webhook/' . config('services.telegram.token'), [TelegramWebhookController::class, 'handle']);
 Route::get('/announcements', [AnnouncementController::class, 'index']);
 
 // --- 2. المسارات المحمية (تتطلب تسجيل الدخول) ---
@@ -77,6 +78,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/library/subjects/{subject}/content', [LibraryController::class, 'getSubjectContent']);
     Route::post('/book-requests', [BookRequestController::class, 'store']);
     Route::delete('/book-requests/{bookRequest}', [BookRequestController::class, 'destroy']);
+    // ✨ --- المسار الجديد لجلب شجرة المكتبة --- ✨
+    Route::get('/library/tree', [LibraryController::class, 'getLibraryTree']);
 
     // --- مسارات الملف الشخصي (البروفايل) ---
     Route::get('/profile', [ProfileController::class, 'showOwnProfile']);
@@ -110,7 +113,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/messages/{message}', [ConversationController::class, 'destroyMessage']);
 
     // Route::post('/conversations/{conversation}/read', [ConversationController::class, 'markAsRead']);
-    Route::post('/conversations/{conversation}/read', [ConversationController::class, 'markMessagesAsRead']);
+    Route::post('/conversations/{conversation}/read', [ConversationController::class, 'markConversationAsRead']);
     // This route checks if a conversation exists with a user and returns the ID
     Route::get('/users/{recipient}/conversation', [ConversationController::class, 'findConversationWithUser']);
     // الشكاوي والاقتراحات

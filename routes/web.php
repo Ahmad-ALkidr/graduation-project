@@ -2,9 +2,11 @@
 
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\LibraryManagementController;
+use App\Http\Controllers\Admin\LibraryStructureController;
 use App\Http\Controllers\Admin\manage_users\AdminAuthController;
 use App\Http\Controllers\Admin\manage_users\AdminController;
 use App\Http\Controllers\Admin\manage_users\UserManagementController;
+use App\Http\Controllers\Api\CollegeController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -48,7 +50,6 @@ Route::prefix('dashboard')->group(function () {
 Route::prefix('users')->name('admin.users.')->controller(UserManagementController::class)->group(function () {
 
     // 3. The 'auth:admin' middleware is already applied by the parent group
-
     Route::get('/', 'show_list')->name('admin.list');
     Route::get('/create', 'show_create_form')->name('admin.create');
     Route::post('/create', 'store')->name('admin.store');
@@ -62,26 +63,51 @@ Route::prefix('users')->name('admin.users.')->controller(UserManagementControlle
 
     // ✨ --- NEW: Route for academics --- ✨
     Route::get('/academics', 'show_academics')->name('list.academics');
-
-    // مسارات إدارة ملفات المكتبة
-    Route::get('/library/pending', [LibraryManagementController::class, 'showPendingFiles'])->name('library.pending');
-    Route::post('/approve/{file}', [LibraryManagementController::class, 'approve'])->name('library.approve');
-    Route::post('/delete/{file}', [LibraryManagementController::class, 'destroy'])->name('library.delete');
-    Route::get('/download/{file}', [LibraryManagementController::class, 'downloadFile'])->name('library.download');
-    // ✨ --- for viewing the file --- ✨
-    Route::get('/view/{file}', [LibraryManagementController::class, 'viewFile'])->name('library.view');
-    // ✨ --- for approved files --- ✨
-    Route::get('/approved', [LibraryManagementController::class, 'showApprovedFiles'])->name('library.approved');
-
-
-
-
-
-
     // You might want a separate route for the password change form/handler
     // Route::post('/account/change-password/{user}', 'change_password')->name('change-password');
 });
-// routes/web.php
+// --- College Management Routes ---
+Route::prefix('colleges')->name('admin.colleges.')->controller(CollegeController::class)->group(function () {
+    Route::get('/', 'index')->name('list');
+    Route::post('/store', 'store')->name('store');
+    Route::post('/delete/{college}', 'destroy')->name('delete');
+});
+
+// مسارات إدارة ملفات المكتبة
+Route::prefix('library')->name('admin.library-files.')->controller(LibraryManagementController::class)->group(function () {
+    Route::get('/library/pending', [LibraryManagementController::class, 'showPendingFiles'])->name('pending');
+    Route::post('/approve/{file}', [LibraryManagementController::class, 'approve'])->name('approve');
+    Route::post('/delete/{file}', [LibraryManagementController::class, 'destroy'])->name('delete');
+    Route::get('/download/{file}', [LibraryManagementController::class, 'downloadFile'])->name('download');
+    // ✨ --- for viewing the file --- ✨
+    Route::get('/view/{file}', [LibraryManagementController::class, 'viewFile'])->name('view');
+    // ✨ --- for approved files --- ✨
+    Route::get('/approved', [LibraryManagementController::class, 'showApprovedFiles'])->name('approved');
+
+});
+
+// --- Library Structure Management ---
+Route::prefix('library-structure')->name('admin.library.structure.')->group(function () {
+    Route::get('/', [LibraryStructureController::class, 'index'])->name('index');
+
+    // College Routes
+    Route::post('/colleges', [LibraryStructureController::class, 'storeCollege'])->name('colleges.store');
+    // ... other college routes
+
+    // ✨ NEW: Department Route
+    Route::post('/departments', [LibraryStructureController::class, 'storeDepartment'])->name('departments.store');
+
+    // ✨ NEW: Subject/Course Route
+    Route::post('/subjects', [LibraryStructureController::class, 'storeSubject'])->name('subjects.store');
+    Route::post('/materials', [LibraryStructureController::class, 'storeMaterial'])->name('materials.store');
+
+
+    // You would add routes for departments, subjects, etc. here
+});
+
+
+
+
 
 Route::get('/check-time', function () {
     $laravelTime = now()->toDateTimeString();

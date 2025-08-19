@@ -22,5 +22,7 @@ class DatabaseSeeder extends Seeder
             BookRequestSeeder::class,
             PostSeeder::class,
         ]);
+        $this->call(UniversityDataSeeder::class); // ✨ أضف هذا السطر
+
     }
 }

@@ -22,7 +22,7 @@ class MessagesRead implements ShouldBroadcast
 
     public function broadcastOn(): array
     {
-        return [new PrivateChannel('private-chat.private.' . $this->conversationId)];
+        return [new PrivateChannel('chat.private.' . $this->conversationId)];
     }
 
     public function broadcastAs(): string

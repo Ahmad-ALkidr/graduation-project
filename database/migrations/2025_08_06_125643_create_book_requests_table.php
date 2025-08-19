@@ -15,7 +15,6 @@ return new class extends Migration
             $table->id();
             $table->string('title');
             $table->string('file_path');
-            $table->enum('type', ['book', 'summary', 'image']);
             $table->enum('status', ['pending', 'approved', 'rejected'])->default('pending');
 
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');

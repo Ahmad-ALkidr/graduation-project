@@ -15,6 +15,7 @@ class PrivateMessageResource extends JsonResource
 
         return [
             'id' => $this->id,
+            'conversation_id' => $this->conversation_id, // ✨ This is the new line
             'content' => $isText ? $this->content : null,
             'type' => $this->type,
             'is_read' => (bool) $this->is_read, // ✨ Add this line

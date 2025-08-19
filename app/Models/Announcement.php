@@ -13,6 +13,6 @@ class Announcement extends Model
         'content',
         'file_path',
         'file_type',
-        'telegram_message_id', // <-- تم إضافة الفاصلة هنا
+        'telegram_message_id',
     ];
 }

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+// ... (Use statements remain the same)
 use App\Http\Controllers\Controller;
 use App\Events\AnnouncementCreated;
 use App\Models\Announcement;
@@ -13,6 +14,7 @@ use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
 use Telegram\Bot\Laravel\Facades\Telegram;
 
+
 class TelegramWebhookController extends Controller
 {
     public function handle(Request $request)
@@ -20,23 +22,25 @@ class TelegramWebhookController extends Controller
         $update = $request->all();
         Log::info('Telegram update received:', $update);
 
-        if (isset($update['channel_post'])) {
-            $post = $update['channel_post'];
+        // تحقق من وجود منشور قناة أو رسالة عادية
+        $post = $update['channel_post'] ?? $update['message'] ?? null;
+
+        if ($post) {
             $messageId = $post['message_id'];
 
             if (Announcement::where('telegram_message_id', $messageId)->exists()) {
                 return response()->json(['status' => 'ok', 'message' => 'Already processed']);
             }
 
+            // --- باقي الكود يبقى كما هو ---
             $content = $post['caption'] ?? $post['text'] ?? null;
             $filePath = null;
             $fileType = null;
             $fileData = null;
 
-            // التحقق من أنواع الملفات المختلفة
             if (isset($post['photo'])) {
                 $fileType = 'image';
-                $fileData = end($post['photo']); // احصل على أكبر صورة
+                $fileData = end($post['photo']);
             } elseif (isset($post['document'])) {
                 $fileType = 'document';
                 $fileData = $post['document'];
@@ -45,10 +49,8 @@ class TelegramWebhookController extends Controller
                 $fileData = $post['video'];
             }
 
-            // إذا وجدنا أي نوع من الملفات، قم بتنزيله
             if ($fileData) {
                 $fileId = $fileData['file_id'];
-                // احصل على الاسم الأصلي للملف إن وجد
                 $originalFileName = $fileData['file_name'] ?? uniqid() . '.tmp';
 
                 try {
@@ -63,17 +65,21 @@ class TelegramWebhookController extends Controller
                 }
             }
 
-            $announcement = Announcement::create([
-                'content' => $content,
-                'file_path' => $filePath,
-                'file_type' => $fileType,
-                'telegram_message_id' => $messageId,
-            ]);
-            broadcast(new AnnouncementCreated($announcement));
+            // --- تحقق من وجود محتوى نصي أو ملف قبل الإنشاء ---
+            if ($content || $filePath) {
+                 $announcement = Announcement::create([
+                    'content' => $content,
+                    'file_path' => $filePath,
+                    'file_type' => $fileType,
+                    'telegram_message_id' => $messageId,
+                ]);
+                broadcast(new AnnouncementCreated($announcement));
 
-
-            $users = User::all();
-            Notification::send($users, new NewAnnouncementNotification($announcement));
+                $users = User::all();
+                Notification::send($users, new NewAnnouncementNotification($announcement));
+            } else {
+                 Log::warning('No content or file found in the message.', ['message_id' => $messageId]);
+            }
         }
 
         return response()->json(['status' => 'ok']);

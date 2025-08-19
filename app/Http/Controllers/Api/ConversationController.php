@@ -227,7 +227,6 @@ class ConversationController extends Controller
         return response()->json(
             [
                 'message' => new PrivateMessageResource($message),
-                'conversation_id' => $conversation->id,
             ],
             201,
         );
@@ -359,7 +358,7 @@ public function markConversationAsRead(Request $request, Conversation $conversat
         $unreadMessages->update(['is_read' => true]);
 
         // Broadcast the event with the IDs of the messages that were just read
-        broadcast(new MessagesRead($messageIdsToUpdate, $conversation->id))->toOthers();
+        broadcast(new MessagesRead($messageIdsToUpdate, $conversation->id));
     }
 
     return response()->json(['message' => 'Conversation marked as read.']);

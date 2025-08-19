@@ -21,7 +21,7 @@ class CourseSeeder extends Seeder
         $db = Subject::where('name', 'قواعد البيانات')->first();
 
         // إنشاء مقررات لقسم هندسة البرمجيات
-        Course::create(['subject_id' => $prog1->id, 'department_id' => $sweDept->id, 'year' => 1, 'semester' => 'first']);
-        Course::create(['subject_id' => $db->id, 'department_id' => $sweDept->id, 'year' => 2, 'semester' => 'second']);
+        Course::create(['subject_id' => $prog1->id, 'department_id' => $sweDept->id, 'year' => 1, 'semester' => 1]);
+        Course::create(['subject_id' => $db->id, 'department_id' => $sweDept->id, 'year' => 2, 'semester' => 2]);
     }
 }

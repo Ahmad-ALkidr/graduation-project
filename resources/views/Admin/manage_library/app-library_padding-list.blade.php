@@ -32,22 +32,22 @@
                             <td class="actions">
     <div class="d-flex align-items-center">
 
-        <a href="{{ route('admin.users.library.view', $file) }}" target="_blank" class="btn btn-sm btn-icon btn-secondary me-2" data-bs-toggle="tooltip" title="View File">
+        <a href="{{ route('admin.library-files.view', $file) }}" target="_blank" class="btn btn-sm btn-icon btn-secondary me-2" data-bs-toggle="tooltip" title="View File">
             <i class="ti ti-eye"></i>
         </a>
 
-        <a href="{{ route('admin.users.library.download', $file) }}" class="btn btn-sm btn-icon btn-primary me-2" data-bs-toggle="tooltip" title="Download File">
+        <a href="{{ route('admin.library-files.download', $file) }}" class="btn btn-sm btn-icon btn-primary me-2" data-bs-toggle="tooltip" title="Download File">
             <i class="ti ti-download"></i>
         </a>
 
-        <form action="{{ route('admin.users.library.approve', $file) }}" method="POST" class="d-inline">
+        <form action="{{ route('admin.library-files.approve', $file) }}" method="POST" class="d-inline">
             @csrf
             <button type="submit" class="btn btn-sm btn-icon btn-success me-2" data-bs-toggle="tooltip" title="Approve">
                 <i class="ti ti-check"></i>
             </button>
         </form>
 
-        <form action="{{ route('admin.users.library.delete', $file) }}" method="POST" class="d-inline">
+        <form action="{{ route('admin.library-files.delete', $file) }}" method="POST" class="d-inline">
             @csrf
             <button type="submit" class="btn btn-sm btn-icon btn-danger" data-bs-toggle="tooltip" title="Delete">
                 <i class="ti ti-trash"></i>

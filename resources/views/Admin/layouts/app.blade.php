@@ -149,7 +149,7 @@
                         </a>
                     </li>
 <!-- Library Management Dropdown -->
-<li class="menu-item {{ request()->routeIs('admin.library.*') ? 'open active' : '' }}">
+<li class="menu-item {{ request()->routeIs('admin.library-files.*') ? 'open active' : '' }}">
     <a href="javascript:void(0);" class="menu-link menu-toggle">
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-file-earmark-check-fill menu-icon tf-icons" viewBox="0 0 16 16">
             <path d="M9.293 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V4.707A1 1 0 0 0 13.707 4L10 .293A1 1 0 0 0 9.293 0M9.5 3.5v-2l3 3h-2a1 1 0 0 1-1-1m-1.45 6.854-2.5-2.5a.5.5 0 0 1 .708-.708L7.5 8.793l1.646-1.647a.5.5 0 0 1 .708.708l-2 2a.5.5 0 0 1-.708 0"/>
@@ -157,19 +157,32 @@
         <div data-i18n="Library Files">Library Files</div>
     </a>
     <ul class="menu-sub">
-        <li class="menu-item {{ request()->routeIs('admin.users.library.pending') ? 'active' : '' }}">
-            <a href="{{ route('admin.users.library.pending') }}" class="menu-link">
+        <li class="menu-item {{ request()->routeIs('admin.library-files.pending') ? 'active' : '' }}">
+            <a href="{{ route('admin.library-files.pending') }}" class="menu-link">
                 <div data-i18n="Pending Files">Pending Files</div>
             </a>
         </li>
-        <li class="menu-item {{ request()->routeIs('admin.users.library.approved') ? 'active' : '' }}">
-            <a href="{{ route('admin.users.library.approved') }}" class="menu-link">
+        <li class="menu-item {{ request()->routeIs('admin.library-files.approved') ? 'active' : '' }}">
+            <a href="{{ route('admin.library-files.approved') }}" class="menu-link">
                 <div data-i18n="Approved Files">Approved Files</div>
             </a>
         </li>
     </ul>
 </li>
 <!--/ Library Management Dropdown -->
+        <li class="menu-item {{ request()->routeIs('admin.colleges.list') ? 'active' : '' }}">
+            <a href="{{ route('admin.colleges.list') }}" class="menu-link">
+        <i class="menu-icon tf-icons ti ti-building-community"></i>
+        <div data-i18n="Colleges">Colleges</div>
+    </a>
+</li>
+<!-- Library Structure Management -->
+<li class="menu-item {{ request()->routeIs('admin.library.structure.*') ? 'active' : '' }}">
+    <a href="{{ route('admin.library.structure.index') }}" class="menu-link">
+        <i class="menu-icon tf-icons ti ti-hierarchy-2"></i>
+        <div data-i18n="Library Structure">Library Structure</div>
+    </a>
+</li>
                     <!--/ admins -->
 
 
@@ -561,7 +574,7 @@
 
 <!-- Core JS -->
 <!-- build:js assets/vendor/js/core.js -->
-
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 <script src="{{ asset('assets') }}/vendor/libs/jquery/jquery.js"></script>
 <script src="{{ asset('assets') }}/vendor/libs/popper/popper.js"></script>
 <script src="{{ asset('assets') }}/vendor/js/bootstrap.js"></script>
@@ -639,7 +652,7 @@
     @foreach ($errors->all() as $error)
         errorMessage += "{{ $error }}" + "<br>"; @endforeach
     toastr.error(errorMessage);
-                  @endif
+                    @endif
     </script>
 
     @stack('scripts')

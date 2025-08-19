@@ -31,17 +31,17 @@
                             <td>{{ $file->created_at->format('h:i A') }}</td>
                             <td class="actions">
                                 <div class="d-flex align-items-center">
-                                    <a href="{{ route('admin.users.library.view', $file) }}" target="_blank"
+                                    <a href="{{ route('admin.library-files.view', $file) }}" target="_blank"
                                         class="btn btn-sm btn-icon btn-secondary me-2" data-bs-toggle="tooltip"
                                         title="View File">
                                         <i class="ti ti-eye"></i>
                                     </a>
-                                    <a href="{{ route('admin.users.library.download', $file) }}"
+                                    <a href="{{ route('admin.library-files.download', $file) }}"
                                         class="btn btn-sm btn-icon btn-primary me-2" data-bs-toggle="tooltip"
                                         title="Download File">
                                         <i class="ti ti-download"></i>
                                     </a>
-                                    <form action="{{ route('admin.users.library.delete', $file) }}" method="POST"
+                                    <form action="{{ route('admin.library-files.delete', $file) }}" method="POST"
                                         class="d-inline">
                                         @csrf
                                         <button type="submit" class="btn btn-sm btn-icon btn-danger"
