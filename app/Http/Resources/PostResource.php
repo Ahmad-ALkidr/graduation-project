@@ -24,9 +24,15 @@ class PostResource extends JsonResource
             'likes_count' => $this->whenCounted('likers', $this->likers_count, 0),
             'comments_count' => $this->whenCounted('comments', $this->comments_count, 0),
 
-            'is_liked_by_user' => $this->when(auth()->check(), function () {
-                return $this->likers->isNotEmpty();
-            }),
+            // 'is_liked_by_user' => $this->when(auth()->check(), function () {
+            //     return $this->likers->isNotEmpty();
+            // }),
+        // It checks if the pre-loaded 'likers' relationship is not empty.
+// in PostResource.php
+
+'is_liked_by_user' => (bool) $this->is_liked_by_user,
+
+
 
             'author' => new UserResource($this->whenLoaded('user')),
         ];

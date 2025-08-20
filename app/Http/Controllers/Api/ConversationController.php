@@ -17,6 +17,7 @@ use App\Models\User;
 use App\Notifications\NewPrivateMessageNotification;
 use DB;
 use Illuminate\Http\Request;
+use Notification;
 use Storage;
 
 class ConversationController extends Controller
@@ -267,7 +268,7 @@ class ConversationController extends Controller
 
         // 4. Return a success response.
         return response()->json([
-            'message' => 'Message deleted successfully.'
+            'message' => 'Message deleted successfully.',
         ]);
     }
 
@@ -326,57 +327,55 @@ class ConversationController extends Controller
     //     ]);
     // }
     /**
- * Find the conversation ID for a given recipient.
- * Returns the ID if a conversation exists, otherwise returns null.
- */
-/**
- * Marks a conversation as read, updates individual messages for "seen" status,
- * and broadcasts the read receipts, all in one action.
- */
-public function markConversationAsRead(Request $request, Conversation $conversation)
-{
-    // 1. Security Check: Ensure the user is a participant.
-    $this->authorize('view', $conversation);
-    $user = $request->user();
+     * Find the conversation ID for a given recipient.
+     * Returns the ID if a conversation exists, otherwise returns null.
+     */
+    /**
+     * Marks a conversation as read, updates individual messages for "seen" status,
+     * and broadcasts the read receipts, all in one action.
+     */
+    public function markConversationAsRead(Request $request, Conversation $conversation)
+    {
+        // 1. Security Check: Ensure the user is a participant.
+        $this->authorize('view', $conversation);
+        $user = $request->user();
 
-    // 2. Update the 'last_read_at' timestamp for the UNREAD COUNT in the conversation list.
-    // This is the first function's logic.
-    $conversation->participants()->updateExistingPivot($user->id, [
-        'last_read_at' => now()
-    ]);
+        // 2. Update the 'last_read_at' timestamp for the UNREAD COUNT in the conversation list.
+        // This is the first function's logic.
+        $conversation->participants()->updateExistingPivot($user->id, [
+            'last_read_at' => now(),
+        ]);
 
-    // 3. Find all messages sent by the OTHER user that are not yet "seen".
-    $unreadMessages = $conversation->messages()
-        ->where('sender_id', '!=', $user->id)
-        ->where('is_read', false);
+        // 3. Find all messages sent by the OTHER user that are not yet "seen".
+        $unreadMessages = $conversation->messages()->where('sender_id', '!=', $user->id)->where('is_read', false);
 
-    // 4. If there are any, update them and notify the sender.
-    if ($unreadMessages->exists()) {
-        $messageIdsToUpdate = $unreadMessages->pluck('id')->toArray();
+        // 4. If there are any, update them and notify the sender.
+        if ($unreadMessages->exists()) {
+            $messageIdsToUpdate = $unreadMessages->pluck('id')->toArray();
 
-        // Mark all found messages as read (for the "seen" checkmarks)
-        $unreadMessages->update(['is_read' => true]);
+            // Mark all found messages as read (for the "seen" checkmarks)
+            $unreadMessages->update(['is_read' => true]);
 
-        // Broadcast the event with the IDs of the messages that were just read
-        broadcast(new MessagesRead($messageIdsToUpdate, $conversation->id));
+            // Broadcast the event with the IDs of the messages that were just read
+            broadcast(new MessagesRead($messageIdsToUpdate, $conversation->id));
+        }
+
+        return response()->json(['message' => 'Conversation marked as read.']);
     }
+    public function findConversationWithUser(Request $request, User $recipient)
+    {
+        $currentUser = $request->user();
 
-    return response()->json(['message' => 'Conversation marked as read.']);
-}
-public function findConversationWithUser(Request $request, User $recipient)
-{
-    $currentUser = $request->user();
+        // Find the one-on-one conversation between the current user and the recipient
+        $conversation = Conversation::query()
+            ->whereHas('participants', fn($q) => $q->where('user_id', $currentUser->id))
+            ->whereHas('participants', fn($q) => $q->where('user_id', $recipient->id))
+            ->whereHas('participants', null, '=', 2) // Ensures it's only a 1-on-1 chat
+            ->first();
 
-    // Find the one-on-one conversation between the current user and the recipient
-    $conversation = Conversation::query()
-        ->whereHas('participants', fn($q) => $q->where('user_id', $currentUser->id))
-        ->whereHas('participants', fn($q) => $q->where('user_id', $recipient->id))
-        ->whereHas('participants', null, '=', 2) // Ensures it's only a 1-on-1 chat
-        ->first();
-
-    // Return a JSON response with the conversation ID, which will be null if not found
-    return response()->json([
-        'conversation_id' => $conversation ? $conversation->id : null,
-    ]);
-}
+        // Return a JSON response with the conversation ID, which will be null if not found
+        return response()->json([
+            'conversation_id' => $conversation ? $conversation->id : null,
+        ]);
+    }
 }

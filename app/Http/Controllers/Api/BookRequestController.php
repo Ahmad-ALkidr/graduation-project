@@ -52,7 +52,7 @@ class BookRequestController extends Controller
             'file_path' => $filePath,
             'user_id' => $user->id,
             'status' => $status,
-            'processed_by_user_id' => $status === 'approved' ? $user->id : null,
+            'processed_by_user_id' => $user->id,
         ]);
 
         return response()->json($bookRequest, 201);

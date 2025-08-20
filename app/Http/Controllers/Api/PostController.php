@@ -8,6 +8,7 @@ use App\Http\Requests\Api\StorePostRequest;
 use App\Http\Requests\Api\UpdatePostRequest;
 use App\Http\Resources\PostResource;
 use App\Models\Post;
+use DB;
 use Illuminate\Http\Request;
 
 class PostController extends Controller
@@ -15,16 +16,47 @@ class PostController extends Controller
     /**
      * عرض كل المنشورات بشكل عام للجميع
      */
+    // in PostController.php
+
+    // in PostController.php
+
+    // in PostController.php
+
+    // in PostController.php
+
+    // in PostController.php
+
+    // in PostController.php
+
+    // in PostController.php
+
+    // in PostController.php
+
     public function index(Request $request)
     {
-        $perPage = min($request->input('per_page', 20), 50); // حد أقصى 50 منشور
+        $perPage = min($request->input('per_page', 20), 50);
+        // $user = $request->user();
+        $userId =  $request->input('id');
+        if (!$userId) {
+            return $posts = Post::with('user')
+                ->withCount(['likers', 'comments'])
+                ->latest()
+                ->paginate($perPage);
+        }
 
-        $posts = Post::with(['user', 'likers' => function($query) {
-            $query->where('user_id', auth()->id());
-        }])
-        ->withCount(['likers', 'comments'])
-        ->latest()
-        ->paginate($perPage);
+        $posts = Post::with('user')
+            ->withCount(['likers', 'comments'])
+
+            // يقوم بإضافة خاصية true/false اسمها 'is_liked_by_user' لكل منشور
+            ->withCount([
+                'likers as is_liked_by_user' => function ($query) use ($userId) {
+                    if ($userId) {
+                        $query->where('user_id', $userId);
+                    }
+                },
+            ])
+            ->latest()
+            ->paginate($perPage);
 
         return PostResource::collection($posts);
     }
@@ -46,11 +78,14 @@ class PostController extends Controller
             $imagePath = str_replace('public/', '', $path);
         }
 
-        $post = $request->user()->posts()->create([
-            // استخدام '?? null' لضمان عدم حدوث خطأ إذا كان الحقل غير موجود
-            'content' => $validated['content'] ?? null,
-            'image_path' => $imagePath,
-        ]);
+        $post = $request
+            ->user()
+            ->posts()
+            ->create([
+                // استخدام '?? null' لضمان عدم حدوث خطأ إذا كان الحقل غير موجود
+                'content' => $validated['content'] ?? null,
+                'image_path' => $imagePath,
+            ]);
 
         $post->load('user');
 

@@ -20,7 +20,7 @@ class LibraryController extends Controller
         return response()->json(
             cache()->remember('colleges', 3600, function () {
                 return College::all();
-            })
+            }),
         );
     }
 
@@ -32,7 +32,7 @@ class LibraryController extends Controller
         return response()->json(
             cache()->remember("college_{$college->id}_departments", 3600, function () use ($college) {
                 return $college->departments;
-            })
+            }),
         );
     }
 
@@ -43,11 +43,8 @@ class LibraryController extends Controller
     {
         return response()->json(
             cache()->remember("department_{$department->id}_options", 1800, function () use ($department) {
-                return Course::where('department_id', $department->id)
-                    ->select('year', 'semester')
-                    ->distinct()
-                    ->get();
-            })
+                return Course::where('department_id', $department->id)->select('year', 'semester')->distinct()->get();
+            }),
         );
     }
 
@@ -59,8 +56,8 @@ class LibraryController extends Controller
     {
         $validated = $request->validate([
             'department_id' => 'required|integer|exists:departments,id',
-            'year'          => 'required|integer',
-            'semester'      => 'required|in:first,second',
+            'year' => 'required|integer',
+            'semester' => 'required|in:first,second',
         ]);
 
         // ابحث عن معرفات المواد الفريدة للمقررات التي تطابق المعايير
@@ -90,66 +87,89 @@ class LibraryController extends Controller
 
         return response()->json($content);
     }
-     /**
+    /**
      * ✨ --- الدالة الجديدة: جلب شجرة المكتبة الكاملة --- ✨
      * تجلب كل الكليات والأقسام والسنوات والفصول والمواد في طلب واحد.
      */
-// app/Http/Controllers/Api/LibraryController.php
+    // app/Http/Controllers/Api/LibraryController.php
 
-public function getLibraryTree()
-{
-    // ✨ 1. تحديث الاستعلام لجلب الملفات الموافق عليها فقط
-    $colleges = College::with([
-        'departments.courses.subject',
-        'departments.courses.bookRequests' => function ($query) {
-            $query->where('status', 'approved');
-        }
-    ])->get();
+    public function getLibraryTree()
+    {
+        // ✨ 1. تحديث الاستعلام لجلب الملفات الموافق عليها فقط
+        $colleges = College::with([
+            'departments.courses.subject',
+            'departments.courses.bookRequests' => function ($query) {
+                $query->where('status', 'approved');
+            },
+        ])->get();
 
-    // الآن نقوم بمعالجة البيانات لإنشاء البنية الشجرية المطلوبة
-    $structuredData = $colleges->map(function ($college) {
-        return [
-            'id' => $college->id,
-            'name' => $college->name,
-            'departments' => $college->departments->map(function ($department) {
-                $years = $department->courses->groupBy('year')->map(function ($yearCourses, $year) {
-                    return [
-                        'year' => $year,
-                        'semesters' => $yearCourses->groupBy('semester')->map(function ($semesterCourses, $semester) {
-
-                            // ✨ --- 2. بداية الكود الجديد لمعالجة المواد والملفات --- ✨
-                            // سنقوم بتجميع كل الملفات لكل مادة فريدة
-                            $subjects = $semesterCourses->mapToGroups(function ($course) {
-                                return [$course->subject->id => $course->bookRequests];
-                            })->map(function ($materials, $subjectId) use ($semesterCourses) {
-                                $subject = $semesterCourses->firstWhere('subject.id', $subjectId)->subject;
-                                return [
-                                    'id' => $subject->id,
-                                    'name' => $subject->name,
-                                    // دمج كل الملفات وإزالة التكرار
-                                    'materials' => $materials->flatten()->unique('id')->values()
-                                ];
-                            })->values();
-
+        // الآن نقوم بمعالجة البيانات لإنشاء البنية الشجرية المطلوبة
+        $structuredData = $colleges->map(function ($college) {
+            return [
+                'id' => $college->id,
+                'name' => $college->name,
+                'departments' => $college->departments->map(function ($department) {
+                    $years = $department->courses
+                        ->groupBy('year')
+                        ->map(function ($yearCourses, $year) {
                             return [
-                                'semester' => $semester,
-                                'subjects' => $subjects,
+                                'year' => $year,
+                                'semesters' => $yearCourses
+                                    ->groupBy('semester')
+                                    ->map(function ($semesterCourses, $semester) {
+                                        // ✨ --- 2. بداية الكود الجديد لمعالجة المواد والملفات --- ✨
+                                        // سنقوم بتجميع كل الملفات لكل مادة فريدة
+                                        $subjects = $semesterCourses
+                                            ->mapToGroups(function ($course) {
+                                                return [$course->subject->id => $course->bookRequests];
+                                            })
+                                            ->map(function ($materials, $subjectId) use ($semesterCourses) {
+                                                $subject = $semesterCourses->firstWhere('subject.id', $subjectId)->subject;
+                                                return [
+                                                    'id' => $subject->id,
+                                                    'name' => $subject->name,
+                                                    // دمج كل الملفات وإزالة التكرار
+                                                    'materials' => $materials
+                                                        ->flatten()
+                                                        ->unique('id')
+                                                        ->map(function ($material) {
+                                                            return [
+                                                                'id' => $material->id,
+                                                                'title' => $material->title,
+                                                                'file_url' => asset('storage/' . $material->file_path),
+                                                                'status' => $material->status,  
+                                                                'user_id' => $material->user_id,
+                                                                'course_id' => $material->course_id,
+                                                                'processed_by_user_id' => $material->processed_by_user_id,
+                                                                'created_at' => $material->created_at,
+                                                                'updated_at' => $material->updated_at,
+                                                            ];
+                                                        })
+                                                        ->values(),
+                                                ];
+                                            })
+                                            ->values();
+
+                                        return [
+                                            'semester' => $semester,
+                                            'subjects' => $subjects,
+                                        ];
+                                        // ✨ --- نهاية الكود الجديد --- ✨
+                                    })
+                                    ->values(),
                             ];
-                            // ✨ --- نهاية الكود الجديد --- ✨
+                        })
+                        ->values();
 
-                        })->values(),
+                    return [
+                        'id' => $department->id,
+                        'name' => $department->name,
+                        'years' => $years,
                     ];
-                })->values();
+                }),
+            ];
+        });
 
-                return [
-                    'id' => $department->id,
-                    'name' => $department->name,
-                    'years' => $years,
-                ];
-            }),
-        ];
-    });
-
-    return response()->json(['data' => $structuredData]);
-}
+        return response()->json(['data' => $structuredData]);
+    }
 }

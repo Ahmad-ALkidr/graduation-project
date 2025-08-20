@@ -14,8 +14,6 @@ class CollegeSeeder extends Seeder
     public function run(): void
     {
         //
-        College::create(['name' => 'كلية الهندسة المعلوماتية']);
-        College::create(['name' => 'كلية الآداب والعلوم الإنسانية']);
-        College::create(['name' => 'كلية العلوم']);
+        // College::create(['name' => 'كلية الآداب والعلوم الإنسانية']);
     }
 }

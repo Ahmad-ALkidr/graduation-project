@@ -132,10 +132,11 @@ class User extends Authenticatable implements MustVerifyEmail
     /**
      * المنشورات التي أعجب بها المستخدم
      */
-    public function likedPosts()
-    {
-        return $this->belongsToMany(Post::class, 'likes')->withTimestamps();
-    }
+// This defines the posts that a user has liked.
+public function likedPosts()
+{
+    return $this->belongsToMany(Post::class, 'likes')->withTimestamps();
+}
 
     public function subjects()
     {

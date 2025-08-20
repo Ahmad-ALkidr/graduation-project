@@ -15,11 +15,11 @@ class DepartmentSeeder extends Seeder
     public function run(): void
     {
         //
-        $itCollege = College::where('name', 'كلية الهندسة المعلوماتية')->first();
-        $artsCollege = College::where('name', 'كلية الآداب والعلوم الإنسانية')->first();
+        // $itCollege = College::where('name', 'كلية الهندسة المعلوماتية')->first();
+        // $artsCollege = College::where('name', 'كلية الآداب والعلوم الإنسانية')->first();
 
-        Department::create(['name' => 'قسم هندسة البرمجيات', 'college_id' => $itCollege->id]);
-        Department::create(['name' => 'قسم نظم المعلومات', 'college_id' => $itCollege->id]);
-        Department::create(['name' => 'قسم اللغة الإنجليزية', 'college_id' => $artsCollege->id]);
+        // Department::create(['name' => 'قسم هندسة البرمجيات', 'college_id' => $itCollege->id]);
+        // Department::create(['name' => 'قسم نظم المعلومات', 'college_id' => $itCollege->id]);
+        // Department::create(['name' => 'قسم اللغة الإنجليزية', 'college_id' => $artsCollege->id]);
     }
 }

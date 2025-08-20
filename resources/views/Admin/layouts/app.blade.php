@@ -183,6 +183,13 @@
         <div data-i18n="Library Structure">Library Structure</div>
     </a>
 </li>
+<!-- Subjects -->
+<li class="menu-item {{ request()->routeIs('admin.subjects.list') ? 'active' : '' }}">
+    <a href="{{ route('admin.subjects.list') }}" class="menu-link">
+        <i class="menu-icon tf-icons ti ti-book"></i>
+        <div data-i18n="Subjects">Subjects</div>
+    </a>
+</li>
                     <!--/ admins -->
 
 

@@ -16,12 +16,12 @@ class CourseSeeder extends Seeder
     public function run(): void
     {
         //
-        $sweDept = Department::where('name', 'قسم هندسة البرمجيات')->first();
-        $prog1 = Subject::where('name', 'البرمجة 1')->first();
-        $db = Subject::where('name', 'قواعد البيانات')->first();
+        // $sweDept = Department::where('name', 'قسم هندسة البرمجيات')->first();
+        // $prog1 = Subject::where('name', 'البرمجة 1')->first();
+        // $db = Subject::where('name', 'قواعد البيانات')->first();
 
-        // إنشاء مقررات لقسم هندسة البرمجيات
-        Course::create(['subject_id' => $prog1->id, 'department_id' => $sweDept->id, 'year' => 1, 'semester' => 1]);
-        Course::create(['subject_id' => $db->id, 'department_id' => $sweDept->id, 'year' => 2, 'semester' => 2]);
+        // // إنشاء مقررات لقسم هندسة البرمجيات
+        // Course::create(['subject_id' => $prog1->id, 'department_id' => $sweDept->id, 'year' => 1, 'semester' => 1]);
+        // Course::create(['subject_id' => $db->id, 'department_id' => $sweDept->id, 'year' => 2, 'semester' => 2]);
     }
 }

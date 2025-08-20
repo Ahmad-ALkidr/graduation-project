@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\LibraryStructureController;
 use App\Http\Controllers\Admin\manage_users\AdminAuthController;
 use App\Http\Controllers\Admin\manage_users\AdminController;
 use App\Http\Controllers\Admin\manage_users\UserManagementController;
+use App\Http\Controllers\Admin\SubjectManagementController;
 use App\Http\Controllers\Api\CollegeController;
 use Illuminate\Support\Facades\Route;
 
@@ -106,18 +107,23 @@ Route::prefix('library-structure')->name('admin.library.structure.')->group(func
 });
 
 
-
-
-
-Route::get('/check-time', function () {
-    $laravelTime = now()->toDateTimeString();
-    $phpTime = date('Y-m-d H:i:s');
-    $timezone = config('app.timezone');
-
-    return "
-        <h1>Time Check</h1>
-        <p>Laravel Time (now()): <strong>{$laravelTime}</strong></p>
-        <p>PHP Time (date()): <strong>{$phpTime}</strong></p>
-        <p>Application Timezone: <strong>{$timezone}</strong></p>
-    ";
+// --- Subject Management Routes ---
+Route::prefix('subjects')->name('admin.subjects.')->controller(SubjectManagementController::class)->group(function () {
+    Route::get('/', 'index')->name('list');
+    Route::post('/store', 'store')->name('store');
+    Route::post('/delete/{subject}', 'destroy')->name('delete');
 });
+
+
+// Route::get('/check-time', function () {
+//     $laravelTime = now()->toDateTimeString();
+//     $phpTime = date('Y-m-d H:i:s');
+//     $timezone = config('app.timezone');
+
+//     return "
+//         <h1>Time Check</h1>
+//         <p>Laravel Time (now()): <strong>{$laravelTime}</strong></p>
+//         <p>PHP Time (date()): <strong>{$phpTime}</strong></p>
+//         <p>Application Timezone: <strong>{$timezone}</strong></p>
+//     ";
+// });

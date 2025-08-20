@@ -30,7 +30,6 @@ class BookRequestSeeder extends Seeder
         BookRequest::create([
             'title' => 'ملخص شامل للبرمجة 1',
             'file_path' => 'public/seed/summary.pdf',
-            'type' => 'summary',
             'status' => 'approved',
             'user_id' => $students->random()->id,
             'course_id' => $course1->id,
@@ -41,7 +40,6 @@ class BookRequestSeeder extends Seeder
         BookRequest::create([
             'title' => 'دورة أسئلة قواعد البيانات',
             'file_path' => 'public/seed/questions.pdf',
-            'type' => 'book',
             'status' => 'pending',
             'user_id' => $students->random()->id,
             'course_id' => $courses->last()->id,
