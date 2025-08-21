@@ -19,16 +19,18 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # Copy your application files
 COPY . .
 
-# ✨ --- THIS IS THE FIX --- ✨
-
-# 1. Create the .env file first
+# Create the .env file
 RUN cp .env.example .env
 
-# 2. Install dependencies. This will create the vendor/autoload.php file.
+# Install composer dependencies
 RUN composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
 
-# 3. NOW, you can safely run artisan commands.
+# Generate the application key
 RUN php artisan key:generate
+
+# ✨ --- THIS IS THE NEW LINE --- ✨
+# Run database migrations automatically during the build
+RUN php artisan migrate --force
 
 # Set permissions for storage
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
