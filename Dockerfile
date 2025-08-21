@@ -20,13 +20,15 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 COPY . .
 
 # ✨ --- THIS IS THE FIX --- ✨
-# Create a temporary .env file and generate the app key
-# This allows the next command to succeed.
-RUN cp .env.example .env
-RUN php artisan key:generate
 
-# Install composer dependencies. This will now work correctly.
+# 1. Create the .env file first
+RUN cp .env.example .env
+
+# 2. Install dependencies. This will create the vendor/autoload.php file.
 RUN composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
+
+# 3. NOW, you can safely run artisan commands.
+RUN php artisan key:generate
 
 # Set permissions for storage
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
