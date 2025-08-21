@@ -19,13 +19,21 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # Copy your application files
 COPY . .
 
-# Install composer dependencies
+# ✨ --- THIS IS THE FIX --- ✨
+# Create a temporary .env file and generate the app key
+# This allows the next command to succeed.
+RUN cp .env.example .env
+RUN php artisan key:generate
+
+# Install composer dependencies. This will now work correctly.
 RUN composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
 
-# Set permissions for storage and bootstrap cache
+# Set permissions for storage
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 RUN chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
+# Expose the port Render will use
+EXPOSE 10000
+
 # The command to run when the container starts
-# Render will provide the $PORT variable
-CMD php artisan serve --host 0.0.0.0 --port $PORT
+CMD php artisan serve --host 0.0.0.0 --port 10000
