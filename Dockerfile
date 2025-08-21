@@ -1,46 +1,31 @@
-# 1. نبدأ من صورة رسمية PHP مع Apache
-FROM php:8.2-apache
+# Use a simple PHP base image
+FROM php:8.2-cli
 
-# 2. تثبيت الأدوات المطلوبة
-RUN apt-get update && apt-get install -y \
-    git \
-    unzip \
-    libpq-dev \
-    libonig-dev \
-    libzip-dev \
-    zip \
-    && docker-php-ext-install pdo pdo_pgsql pgsql mbstring zip exif pcntl bcmath
-
-# 3. تفعيل Apache mod_rewrite (مطلوب للـ Laravel routing)
-RUN a2enmod rewrite
-
-# 4. إعداد مجلد العمل
+# Set working directory
 WORKDIR /var/www/html
 
-# 5. نسخ composer أولاً (لتثبيت الحزم)
-COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+# Install system dependencies needed for Laravel
+RUN apt-get update && apt-get install -y \
+    zip \
+    unzip \
+    libpq-dev # For PostgreSQL
 
-# 6. نسخ ملفات المشروع
+# Install PHP extensions
+RUN docker-php-ext-install pdo pdo_pgsql bcmath
+
+# Install Composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
+# Copy your application files
 COPY . .
 
-# 7. تثبيت المكتبات باستخدام composer
-RUN composer install --no-dev --optimize-autoloader
+# Install composer dependencies
+RUN composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
 
-# 8. إعداد أذونات مجلد storage و bootstrap/cache
-RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache \
-    && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
+# Set permissions for storage and bootstrap cache
+RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
+RUN chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
-# 9. إعداد Apache VirtualHost للـ Laravel (توجيه إلى public/)
-RUN echo '<VirtualHost *:80>\n\
-    DocumentRoot /var/www/html/public\n\
-    <Directory /var/www/html/public>\n\
-        AllowOverride All\n\
-        Require all granted\n\
-    </Directory>\n\
-</VirtualHost>' > /etc/apache2/sites-available/000-default.conf
-
-# 10. المنفذ
-EXPOSE 80
-
-# 11. أمر التشغيل
-CMD ["apache2-foreground"]
+# The command to run when the container starts
+# Render will provide the $PORT variable
+CMD php artisan serve --host 0.0.0.0 --port $PORT
