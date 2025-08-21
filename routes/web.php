@@ -127,3 +127,14 @@ Route::prefix('subjects')->name('admin.subjects.')->controller(SubjectManagement
 //         <p>Application Timezone: <strong>{$timezone}</strong></p>
 //     ";
 // });
+// routes/web.php
+
+
+Route::get('/test-db', function () {
+    try {
+        \DB::connection()->getPdo();
+        return '✅ اتصال قاعدة البيانات PostgreSQL ناجح!';
+    } catch (\Exception $e) {
+        return '❌ فشل الاتصال: ' . $e->getMessage();
+    }
+});
