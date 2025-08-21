@@ -38,4 +38,4 @@ RUN chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 EXPOSE 10000
 
 # The command to run when the container starts
-CMD php artisan migrate --force && php artisan serve --host 0.0.0.0 --port 10000
+php artisan migrate --force && php artisan db:seed --force && php artisan serve --host 0.0.0.0 --port 10000
