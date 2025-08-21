@@ -35,13 +35,14 @@ class PostController extends Controller
     public function index(Request $request)
     {
         $perPage = min($request->input('per_page', 20), 50);
-        // $user = $request->user();
+
         $userId =  $request->input('id');
-        if (!$userId) {
-            return $posts = Post::with('user')
+        if ($userId != null) {
+            $posts = Post::with('user')
                 ->withCount(['likers', 'comments'])
                 ->latest()
                 ->paginate($perPage);
+            return PostResource::collection($posts);
         }
 
         $posts = Post::with('user')
