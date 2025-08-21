@@ -22,7 +22,7 @@ COPY . .
 # ✨ --- THIS IS THE FIX --- ✨
 
 # 1. Create the .env file first
-COPY .env .env
+RUN cp .env.example .env
 
 # 2. Install dependencies. This will create the vendor/autoload.php file.
 RUN composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
