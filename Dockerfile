@@ -28,9 +28,7 @@ RUN composer install --no-dev --no-interaction --prefer-dist --optimize-autoload
 # Generate the application key
 RUN php artisan key:generate
 
-# ✨ --- THIS IS THE NEW LINE --- ✨
-# Run database migrations automatically during the build
-RUN php artisan migrate --force
+# ❌ --- The migrate command has been REMOVED from here --- ❌
 
 # Set permissions for storage
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
@@ -39,5 +37,7 @@ RUN chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 # Expose the port Render will use
 EXPOSE 10000
 
-# The command to run when the container starts
-CMD php artisan serve --host 0.0.0.0 --port 10000
+# ✨ --- THIS IS THE FIX --- ✨
+# The command to run when the container starts.
+# It will now run migrations first, and then start the server.
+CMD php artisan migrate --force && php artisan serve --host 0.0.0.0 --port 10000

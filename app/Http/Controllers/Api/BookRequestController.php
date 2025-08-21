@@ -20,13 +20,13 @@ class BookRequestController extends Controller
 
     // in your BookRequestController.php or similar
 
-    public function store(Request $request)
+public function store(Request $request)
     {
-        // 1. ✨ Simplified Validation
+        // 1. ✨ تحديث قواعد التحقق
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'course_id' => 'required|integer|exists:courses,id',
-            // The 'file' validation now only accepts document types
+            // الآن نقبل فقط الملفات من نوع مستندات
             'file' => ['required', 'file', 'mimes:pdf,doc,docx,ppt,pptx', 'max:10240'], // 10MB max
         ]);
 
@@ -42,17 +42,18 @@ class BookRequestController extends Controller
             }
         }
 
-        // 2. ✨ Correct File Storage
         $filePath = $request->file('file')->store('book_requests', 'public');
 
-        // 3. ✨ Simplified Record Creation (no 'type')
+        // 2. ✨ تحديث عملية إنشاء السجل
         $bookRequest = BookRequest::create([
             'title' => $validated['title'],
             'course_id' => $validated['course_id'],
             'file_path' => $filePath,
+            'type' => 'document', // تعيين النوع تلقائيًا
             'user_id' => $user->id,
             'status' => $status,
-            'processed_by_user_id' => $user->id,
+            // 3. ✨ تصحيح منطق المعالج
+            'processed_by_user_id' => ($status === 'approved') ? $user->id : null,
         ]);
 
         return response()->json($bookRequest, 201);
