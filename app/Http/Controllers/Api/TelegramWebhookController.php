@@ -21,7 +21,7 @@ class TelegramWebhookController extends Controller
     {
         $update = $request->all();
         Log::info('Telegram update received:', $update);
-
+        
         // تحقق من وجود منشور قناة أو رسالة عادية
         $post = $update['channel_post'] ?? $update['message'] ?? null;
 
