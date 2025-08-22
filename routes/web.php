@@ -139,8 +139,8 @@ Route::get('/test-db', function () {
     }
 });
 // routes/web.php
-Route::get('/test-telegram', function() {
-    $token = env('TELEGRAM_BOT_TOKEN');
-    $response = Http::get("https://api.telegram.org/bot$token/getMe");
-    return $response->json();
-});
+// Route::get('/test-telegram', function() {
+//     $token = env('TELEGRAM_BOT_TOKEN');
+//     $response = Http::get("https://api.telegram.org/bot$token/getMe");
+//     return $response->json();
+// });
