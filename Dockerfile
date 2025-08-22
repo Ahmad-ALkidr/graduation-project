@@ -25,7 +25,7 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 COPY . .
 
 # 2. Now that the 'artisan' file exists, run composer install
-RUN composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
+RUN composer install 
 
 # 3. Generate the app key
 RUN php artisan key:generate
