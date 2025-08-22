@@ -1,10 +1,8 @@
 # Use PHP 8.2 CLI image
 FROM php:8.2-cli
 
-# Set working directory
 WORKDIR /var/www/html
 
-# Install system dependencies
 RUN apt-get update && apt-get install -y \
     zip \
     unzip \
@@ -13,33 +11,30 @@ RUN apt-get update && apt-get install -y \
     curl \
     && apt-get clean
 
-# Install PHP extensions
 RUN docker-php-ext-install pdo pdo_pgsql bcmath
 
-# Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# 1. Copy only composer files first (for caching)
+# 1. Copy composer files only
 COPY composer.json composer.lock ./
 
-# 2. Install dependencies (بدون تشغيل artisan)
+# 2. Install deps (بدون artisan key أو أي شيء)
 RUN composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
 
-# 3. Copy application files
+# 3. Copy application files (بدون .env لأنه مستبعد في .dockerignore)
 COPY . .
 
-# 4. نسخ env.example -> env (وقت build فقط، القيم الحقيقية هتيجي من Render)
+# 4. إذا ما فيه .env وقت runtime، انسخ example
 RUN if [ ! -f .env ]; then cp .env.example .env; fi
 
-# 5. 👇 لا تعمل php artisan هنا (سيتم تشغيله وقت runtime داخل Render بعد تحميل env)
-# RUN php artisan key:generate   ← ❌ شيلها
+# 5. الصلاحيات
+RUN chown -R www-data:www-data storage bootstrap/cache
+RUN chmod -R 775 storage bootstrap/cache
 
-# Set permissions
-RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
-RUN chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
+# 6. entrypoint.sh تنفيذي
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
 
-# Expose port
 EXPOSE 10000
 
-# Run entrypoint
 CMD ["/entrypoint.sh"]

@@ -1,12 +1,16 @@
-#!/bin/bash
+#!/bin/sh
 set -e
 
-# تنظيف وتجهيز Laravel
-php artisan config:clear
-php artisan cache:clear
-php artisan route:clear
-php artisan view:clear
+# Generate key if missing
+if [ -z "$APP_KEY" ]; then
+  php artisan key:generate --force
+fi
+
+# Run migrations
 php artisan migrate --force
 
-# تشغيل Supervisor لإدارة كل الخدمات
-exec /usr/bin/supervisord -c /etc/supervisord.conf
+# Run queues in background
+php artisan queue:work --daemon &
+
+# Start Laravel server
+exec php artisan serve --host 0.0.0.0 --port 10000

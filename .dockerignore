@@ -1,0 +1,36 @@
+# Ignore environment files
+.env
+.env.*
+!.env.example
+
+# Ignore Laravel cache
+/storage/*.key
+/storage/framework/cache/*
+/storage/framework/sessions/*
+/storage/framework/views/*
+/storage/logs/*
+
+# Ignore vendor (سيتم تثبيته من composer داخل الـ container)
+vendor/
+
+# Ignore node stuff (سيتم تثبيته وقت build frontend فقط)
+node_modules/
+npm-debug.log
+yarn-error.log
+pnpm-lock.yaml
+
+# Ignore Git files
+.git
+.gitignore
+.gitattributes
+
+# Ignore IDE/editor configs
+.idea
+.vscode
+*.swp
+*.swo
+*.swn
+
+# Ignore Docker itself
+docker-compose.yml
+Dockerfile
